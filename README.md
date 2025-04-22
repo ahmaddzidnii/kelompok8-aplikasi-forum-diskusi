@@ -33,7 +33,7 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 - **Backend:** Next.js + tRPC (TypeScript Remote Procedural Call)
 - **Frontend:** React.js, Next.js
 - **Database:** PostgreSQL
-- **Autentikasi:** Kinde Auth
+- **Autentikasi:** Auth.js
 
 ---
 
@@ -55,8 +55,6 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 
 ## 👥 Anggota Tim
 
-(Opsional – kamu bisa tambahkan nama anggota dan peran di sini seperti pada contoh SportTyping)
-
 | Nama                          | NIM           | Peran                |
 | ----------------------------- | ------------- | -------------------- |
 | [MUHAMMAD YOGA AKBAR HABIBIE] | [23106050034] | [Project Manager]    |
@@ -72,7 +70,7 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 
 - Node.js (versi terbaru)
 - PostgreSQL
-- Kinde Auth Setup (akun dan konfigurasi API)
+- Auth.js Setup (akun dan konfigurasi API)
 
 ### Pengaturan Pengembangan Lokal
 
