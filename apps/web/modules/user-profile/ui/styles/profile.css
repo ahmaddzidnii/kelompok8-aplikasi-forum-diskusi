@@ -1,0 +1,39 @@
+.Layout {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: auto 0 minmax(
+      0,
+      calc(100% - var(--Layout-gutter) - var(--Layout-sidebar-width))
+    );
+  gap: var(--Layout-gutter);
+  --Layout-sidebar-width: 256px;
+  --Layout-gutter: 16px;
+}
+
+.Layout-sidebar {
+  width: var(--Layout-sidebar-width);
+  grid-column: 1;
+}
+
+.Layout-main {
+  grid-column: 2 / span 2;
+  min-width: 0;
+}
+
+@media (min-width: 1012px) {
+  .Layout {
+    --Layout-gutter: 24px;
+    --Layout-sidebar-width: 296px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .Layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .Layout-sidebar {
+    width: 100%;
+  }
+}
