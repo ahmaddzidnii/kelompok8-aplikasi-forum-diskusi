@@ -1,5 +1,6 @@
 "use client";
 
+import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -21,13 +22,16 @@ const NotFoundPage = () => {
           Halaman yang anda cari tidak tersedia. Kami mohon maaf. Coba telusuri
           yang lain.
         </p>
+        <div className="my-5">
+          <ApplicationLogoWithBrand />
+        </div>
         <div className="font-semibold text-blue-400">
           <span onClick={handleBack} className="cursor-pointer hover:underline">
             Kembali
           </span>
           <span className="mx-1 text-primary">•</span>
           <Link className="cursor-pointer hover:underline" href="/">
-            Kembali ke Beranda
+            Ke Beranda
           </Link>
         </div>
       </div>
