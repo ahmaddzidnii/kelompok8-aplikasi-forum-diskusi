@@ -68,7 +68,7 @@ export const FilterCarousel = ({
             onClick={() => onSelect(null)}
           >
             <Badge
-              variant={!value ? "default" : "secondary"}
+              variant={!value ? "default" : "secondaryOutline"}
               className="cursor-pointer whitespace-nowrap rounded-lg px-3 py-1 text-sm"
             >
               All
@@ -94,7 +94,9 @@ export const FilterCarousel = ({
                 className="basis-auto pl-3"
               >
                 <Badge
-                  variant={value === item.value ? "default" : "secondary"}
+                  variant={
+                    value === item.value ? "default" : "secondaryOutline"
+                  }
                   className="cursor-pointer whitespace-nowrap rounded-lg px-3 py-1 text-sm"
                 >
                   {item.label}
