@@ -10,7 +10,6 @@ interface UserPageNavbarProps {
   username?: string | null;
   countQuestion?: number;
   countAnswer?: number;
-
 }
 
 export const UserPageNavbar = ({
@@ -36,12 +35,11 @@ export const UserPageNavbar = ({
               </div>
               <Link
                 href={`/@${username}`}
-                className="text-base font-bold text-primary"
+                className="text-base font-bold text-foreground"
               >
                 {username || "ahmaddzidnii"}
               </Link>
             </div>
-
           </div>
 
           {/* Auth Button */}
@@ -54,4 +52,3 @@ export const UserPageNavbar = ({
     </header>
   );
 };
-

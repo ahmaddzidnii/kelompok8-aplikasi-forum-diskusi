@@ -7,7 +7,7 @@ import { TooltipWrapper } from "@/components/TooltipWrapper";
 
 export const MainNavbar = () => {
   return (
-    <header className="fixed top-0 z-50 h-16 w-full border-b bg-sidebar">
+    <header className="sticky top-0 z-50 h-16 w-full border-b bg-sidebar">
       <div className="mx-auto flex h-full max-w-screen-xl items-center justify-between">
         <div className="flex items-center">
           <FaBars className="mr-4 size-6 cursor-pointer md:hidden" />

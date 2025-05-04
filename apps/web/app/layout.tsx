@@ -8,6 +8,7 @@ import { config } from "@/config";
 import { Providers } from "@/providers";
 
 import "./globals.css";
+import Scroll from "@/components/Scroll";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700"],
@@ -40,6 +41,7 @@ export default function RootLayout({
           pauseOnHover={false}
           transition={Bounce}
         />
+        <Scroll />
         <Providers>{children}</Providers>
       </body>
     </html>
