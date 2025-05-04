@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body style={roboto.style} className={cn("min-w-[300px] antialiased")}>
+      <body style={roboto.style} className={cn("min-w-[320px] antialiased")}>
         <NextTopLoader showSpinner={false} />
         <ToastContainer
           position="top-right"

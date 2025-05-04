@@ -5,7 +5,7 @@ import { config } from "@/config";
 
 export const Footer = () => {
   return (
-    <footer className="mt-5">
+    <footer className="mt-5 bg-sidebar">
       <Separator />
       <div className="flex h-12 items-center justify-center">
         <span className="text-sm">
