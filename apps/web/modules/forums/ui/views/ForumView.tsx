@@ -1,4 +1,4 @@
-import { CategoriesSection } from "../sections/CategoriesSection";
+import { CategoriesSection } from "../../../core/ui/sections/CategoriesSection";
 import { QuestionsSection } from "../sections/QuestionsSection";
 
 interface ForumViewProps {
