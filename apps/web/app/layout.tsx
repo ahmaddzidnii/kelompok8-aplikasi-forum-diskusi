@@ -8,6 +8,7 @@ import { config } from "@/config";
 import { Providers } from "@/providers";
 
 import "./globals.css";
+import Scroll from "@/components/Scroll";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700"],
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body style={roboto.style} className={cn("min-w-[300px] antialiased")}>
+      <body style={roboto.style} className={cn("min-w-[320px] antialiased")}>
         <NextTopLoader showSpinner={false} />
         <ToastContainer
           position="top-right"
@@ -40,6 +41,7 @@ export default function RootLayout({
           pauseOnHover={false}
           transition={Bounce}
         />
+        <Scroll />
         <Providers>{children}</Providers>
       </body>
     </html>

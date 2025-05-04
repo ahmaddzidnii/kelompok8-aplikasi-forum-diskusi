@@ -1,10 +1,11 @@
-interface LayoutProps {
+import { MainLayout } from "@/modules/core/ui/layouts/MainLayout";
+
+interface HomeLayoutProps {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
-  // return <AppLayout>{children}</AppLayout>;
-  return <div>{children}</div>;
+const HomeLayout = ({ children }: HomeLayoutProps) => {
+  return <MainLayout>{children}</MainLayout>;
 };
 
-export default Layout;
+export default HomeLayout;

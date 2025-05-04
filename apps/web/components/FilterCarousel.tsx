@@ -71,7 +71,7 @@ export const FilterCarousel = ({
               variant={!value ? "default" : "secondaryOutline"}
               className="cursor-pointer whitespace-nowrap rounded-lg px-3 py-1 text-sm"
             >
-              All
+              Semua kategori
             </Badge>
           </CarouselItem>
           {isLoading &&
