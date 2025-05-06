@@ -44,7 +44,7 @@ export const ReactGithubHeatmap = ({
     ? new Date(props.startDate)
     : DEFAULT_START_DATE;
   const endDate = props.endDate ? new Date(props.endDate) : DEFAULT_END_DATE;
-  const contributionData = props.data || [];
+  const contributionData = useMemo(() => props.data || [], [props.data]);
 
   // Generate tooltip content for a cell
   const getTooltipContent = (date: Date) => {
