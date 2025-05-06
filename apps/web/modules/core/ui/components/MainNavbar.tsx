@@ -1,4 +1,4 @@
-import { FaBars, FaPlus, FaSearch } from "react-icons/fa";
+import { FaPlus, FaSearch } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
@@ -10,7 +10,6 @@ export const MainNavbar = () => {
     <header className="sticky top-0 z-50 h-16 w-full border-b bg-sidebar">
       <div className="mx-auto flex h-full max-w-screen-xl items-center justify-between">
         <div className="flex items-center">
-          <FaBars className="mr-4 size-6 cursor-pointer md:hidden" />
           <ApplicationLogoWithBrand />
         </div>
         <div>
