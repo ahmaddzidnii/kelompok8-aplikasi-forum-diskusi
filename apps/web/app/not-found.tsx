@@ -1,8 +1,9 @@
 "use client";
 
-import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
 
 const NotFoundPage = () => {
   const router = useRouter();
@@ -13,6 +14,7 @@ const NotFoundPage = () => {
     <>
       <title>404 Not Found</title>
       <div className="flex h-screen flex-col items-center justify-center px-2 md:px-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="pointer-events-none"
           src="https://www.gstatic.com/youtube/src/web/htdocs/img/monkey.png"

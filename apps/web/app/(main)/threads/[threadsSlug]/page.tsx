@@ -1,3 +1,6 @@
+import { HydrateClient } from "@/trpc/server";
+import { ThreadView } from "@/modules/threads/ui/views/ThreadView";
+
 interface ThreadsDetailProps {
   params: {
     threadsSlug: string;
@@ -5,7 +8,12 @@ interface ThreadsDetailProps {
 }
 
 const ThreadsDetail = ({ params }: ThreadsDetailProps) => {
-  return <div>{JSON.stringify(params)}</div>;
+  // TODO: prefetch thread detail data
+  return (
+    <HydrateClient>
+      <ThreadView threadSlug={params.threadsSlug} />
+    </HydrateClient>
+  );
 };
 
 export default ThreadsDetail;
