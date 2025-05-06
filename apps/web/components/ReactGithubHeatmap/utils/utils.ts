@@ -4,7 +4,7 @@ interface getDateRangeProps {
 
 export const getDateRange = ({ endDate }: getDateRangeProps) => {
   // Go back approximately one year (52 weeks)
-  let startDate = new Date(endDate);
+  const startDate = new Date(endDate);
   startDate.setDate(endDate.getDate() - 52 * 7);
 
   // Adjust to the nearest Sunday if not already a Sunday
@@ -43,7 +43,7 @@ export const generateDateGrid = (startDate: Date, endDate: Date) => {
   ) as Date[][] | null[][];
 
   // Create a copy to avoid modifying the original date
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   let week = 0;
   let dayOfWeek = currentDate.getDay();
 
@@ -170,7 +170,7 @@ export const generateDataByDateRange = (startDate: string, endDate: string) => {
 
 export const get52WeeksDateRange = ({ endDate }: { endDate: Date }) => {
   // Go back approximately one year (52 weeks)
-  let startDate = new Date(endDate);
+  const startDate = new Date(endDate);
   startDate.setDate(endDate.getDate() - 52 * 7);
 
   // Adjust to the nearest Sunday if not already a Sunday

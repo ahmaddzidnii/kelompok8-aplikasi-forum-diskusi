@@ -7,28 +7,28 @@ import { FaBookmark, FaHome } from "react-icons/fa";
 import { RiQuestionAnswerFill } from "react-icons/ri";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
+// Menu items configuration
+const menuItems = [
+  {
+    path: "/",
+    label: "Beranda",
+    icon: FaHome,
+  },
+  {
+    path: "/threads/bookmark",
+    label: "Jawaban tersimpan",
+    icon: FaBookmark,
+  },
+  {
+    path: "/answers",
+    label: "Jawab pertanyaan",
+    icon: RiQuestionAnswerFill,
+  },
+];
 export const MainSidebar = () => {
   const pathname = usePathname();
-
-  // Menu items configuration
-  const menuItems = [
-    {
-      path: "/",
-      label: "Beranda",
-      icon: FaHome,
-    },
-    {
-      path: "/threads/bookmark",
-      label: "Pertanyaan disimpan",
-      icon: FaBookmark,
-    },
-    {
-      path: "/answers",
-      label: "Jawab pertanyaan",
-      icon: RiQuestionAnswerFill,
-    },
-  ];
 
   return (
     <div className="hidden md:block">
@@ -55,5 +55,29 @@ export const MainSidebar = () => {
         ))}
       </div>
     </div>
+  );
+};
+
+export const MobileSidebar = () => {
+  const pathname = usePathname();
+  const isActive = (path: string) => pathname === path;
+  return (
+    <nav className="fixed bottom-0 left-0 z-50 grid h-16 w-full grid-cols-3 border-t bg-white px-2 shadow-md md:hidden">
+      {menuItems.map((item) => (
+        <Button
+          key={item.path}
+          variant="ghost"
+          asChild
+          className={cn(
+            "h-full [&_svg]:size-6",
+            isActive(item.path) && "[&_svg]:fill-primary",
+          )}
+        >
+          <Link href={item.path}>
+            {React.createElement(item.icon, { className: "size-4" })}
+          </Link>
+        </Button>
+      ))}
+    </nav>
   );
 };
