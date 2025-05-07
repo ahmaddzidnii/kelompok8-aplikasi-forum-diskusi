@@ -3,6 +3,7 @@
 import { FaBookmark, FaComment } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
+import { useComment } from "@/modules/comments/hooks/UseComment";
 
 interface AnswerCardActionBarProps {
   count: {
@@ -12,12 +13,23 @@ interface AnswerCardActionBarProps {
 }
 
 export const AnswerCardActionBar = ({ count }: AnswerCardActionBarProps) => {
+  const { setIsOpen, isOpen } = useComment();
+
+  const handleCommentClick = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div className="flex items-center gap-2 border-t py-2.5">
       <Button size="sm" className="rounded-full">
         Dukung naik • {count.upVote}
       </Button>
-      <Button size="sm" variant="ghost" className="rounded-full text-xs">
+      <Button
+        onClick={handleCommentClick}
+        size="sm"
+        variant="ghost"
+        className="rounded-full text-xs"
+      >
         <FaComment />
         <span>{count.comment}</span>
       </Button>

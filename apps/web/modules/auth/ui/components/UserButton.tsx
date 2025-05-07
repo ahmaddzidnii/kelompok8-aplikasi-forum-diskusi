@@ -28,7 +28,7 @@ export const UserButton = () => {
 
   if (!data && status === "unauthenticated") {
     return (
-      <Button>
+      <Button variant="outline" className="rounded-full">
         <Link href={`/auth/login`}>Login</Link>
       </Button>
     );

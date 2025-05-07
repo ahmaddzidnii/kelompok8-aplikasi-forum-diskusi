@@ -1,4 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { CommentView } from "@/modules/comments/ui/components/CommentView";
+import { useComment } from "@/modules/comments/hooks/UseComment";
+
 import { UserMeta } from "./UserMeta";
 import { AnswerCardActionBar } from "./AnswerCardActionBar";
 
@@ -23,6 +26,8 @@ export const AnswerCard = ({
   answerContent,
   count,
 }: AnswerCardProps) => {
+  const { isOpen } = useComment();
+
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
@@ -37,6 +42,12 @@ export const AnswerCard = ({
         <p className="text-base font-semibold">{answerContent}</p>
 
         <AnswerCardActionBar count={count} />
+
+        {isOpen && (
+          <div className="mt-4">
+            <CommentView />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
