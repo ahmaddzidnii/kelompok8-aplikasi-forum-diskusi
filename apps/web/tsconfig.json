@@ -28,7 +28,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "prisma/seed.js"
+    "prisma/seed.js",
+    "modules/comments/ui/components/CommentInput.tsx"
   ],
   "exclude": ["node_modules"]
 }

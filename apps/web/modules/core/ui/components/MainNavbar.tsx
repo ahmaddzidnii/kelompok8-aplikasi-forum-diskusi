@@ -2,8 +2,8 @@ import { FaPlus, FaSearch } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipWrapper } from "@/components/TooltipWrapper";
+import { UserButton } from "@/modules/auth/ui/components/UserButton";
 
 export const MainNavbar = () => {
   return (
@@ -33,10 +33,7 @@ export const MainNavbar = () => {
                 <FaPlus />
               </Button>
             </TooltipWrapper>
-            <Avatar>
-              <AvatarImage src="/avatar.png" />
-              <AvatarFallback></AvatarFallback>
-            </Avatar>
+            <UserButton />
           </nav>
         </div>
       </div>
