@@ -86,6 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { id: message.user.id },
           data: {
             username: generateFromEmail(message.user.email!, 3),
+            organization: "Komunitas Forumdiskusi.",
           },
         });
       }

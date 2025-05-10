@@ -48,5 +48,9 @@ export const ApplicationLogoWithBrand = () => {
 };
 
 export const ApplicationLogoOnly = () => {
-  return ApplicationLogo;
+  return (
+    <>
+      <ApplicationLogo className="h-8 w-8" />
+    </>
+  );
 };

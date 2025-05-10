@@ -41,6 +41,7 @@ export default function RootLayout({
           pauseOnHover={false}
           transition={Bounce}
         />
+
         <Scroll />
         <Providers>{children}</Providers>
       </body>

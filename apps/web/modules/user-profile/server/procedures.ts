@@ -31,8 +31,8 @@ export const usersRouter = createTRPCRouter({
 
   getCountNavbar: publicProcedure.query(async () => {
     return {
-      questionCount: 90,
-      answerCount: 1298730,
+      questionCount: 77,
+      answerCount: 53,
     };
   }),
 

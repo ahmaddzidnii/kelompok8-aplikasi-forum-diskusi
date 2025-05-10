@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
@@ -245,6 +246,7 @@ const Comment = ({ comment }: { comment: CommentType }) => {
   };
 
   const { status } = useSession();
+  const router = useRouter();
 
   // Periksa apakah komentar memiliki balasan
   const hasReplies = commentReplies.length > 0;
@@ -271,7 +273,7 @@ const Comment = ({ comment }: { comment: CommentType }) => {
           className="text-left text-xs font-semibold"
           onClick={() => {
             if (status === "unauthenticated") {
-              toast.error("Silakan login untuk membalas komentar.");
+              router.replace("/auth/login");
               return;
             }
             setIsReplyFormOpen((prev) => !prev);

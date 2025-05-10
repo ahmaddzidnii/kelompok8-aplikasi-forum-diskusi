@@ -4,4 +4,5 @@ export const config = {
   logLevel: process.env.NEXT_PUBLIC_LOG_LEVEL ?? "info",
   defaultRedrictAfterLoginUrl:
     process.env.NEXT_PUBLIC_DEFAULT_AFTER_LOGIN_URL ?? "/",
+  loginRoute: process.env.NEXT_PUBLIC_LOGIN_ROUTE ?? "/auth/login",
 };

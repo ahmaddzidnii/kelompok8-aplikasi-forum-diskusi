@@ -11,6 +11,7 @@ interface TooltipWrapperProps {
   content: string;
   children: React.ReactNode;
   className?: string;
+  place?: "top" | "bottom" | "left" | "right";
 }
 
 export const TooltipWrapper = (props: TooltipWrapperProps) => {

@@ -1,33 +1,25 @@
 import "server-only";
-import Link from "next/link";
-import { PlusIcon } from "lucide-react";
 
-import { auth } from "@/auth";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { FaPlus } from "react-icons/fa6";
+
 import { UserButton } from "@/modules/auth/ui/components/UserButton";
 
-import { TooltipWrapper } from "@/components/TooltipWrapper";
+import { Button } from "@/components/ui/button";
 
 export const MenuEndNavbar = async () => {
-    const session = await auth();
-    const isAuthenticated = !!session;
-    return (
-        <div className="flex flex-shrink-0 items-center gap-4">
-            {isAuthenticated ? (
-                <>
-                    <TooltipWrapper content="Tanya Sesuatu">
-                        <Button variant="outline" className="gap-0 [&_svg]:size-5 rounded-xl p md:px-4 py-2">
-                            <PlusIcon />
-                            <span className="ml-3 hidden md:block">Tanya sesuatu</span>
-                        </Button>
-                    </TooltipWrapper>
-                    <UserButton />
-                </>
-            ) : (
-                <Button asChild>
-                    <Link href="/auth/login">Login</Link>
-                </Button>
-            )}
-        </div>
-    );
+  return (
+    <div className="flex flex-shrink-0 items-center gap-4">
+      <Button variant="default" asChild>
+        <Link href="/questions/ask">
+          <div className="flex items-center gap-2">
+            <span className="hidden md:block">Tanyakan sesuatu</span>
+            <FaPlus />
+          </div>
+        </Link>
+      </Button>
+
+      <UserButton />
+    </div>
+  );
 };
