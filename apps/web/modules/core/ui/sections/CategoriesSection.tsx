@@ -51,5 +51,9 @@ const CategoriesSectionSuspense = ({ categoryId }: CategoriesSectionProps) => {
 
     router.push(url.toString());
   };
-  return <FilterCarousel onSelect={onSelect} value={categoryId} data={data} />;
+  return (
+    <div className="sticky top-[64px] z-50 bg-background py-2">
+      <FilterCarousel onSelect={onSelect} value={categoryId} data={data} />
+    </div>
+  );
 };

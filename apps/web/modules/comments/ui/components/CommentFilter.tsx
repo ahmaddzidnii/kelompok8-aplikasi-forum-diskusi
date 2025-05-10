@@ -1,4 +1,4 @@
-import { useQueryState } from "nuqs";
+import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
 import {
@@ -11,10 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const CommentFilter = () => {
-  const [sort, setSort] = useQueryState("commentSort", {
-    clearOnDefault: true,
-    defaultValue: "desc",
-  });
+  const [sort, setSort] = useState<"asc" | "desc">("asc");
 
   const handleSortChange = (value: "asc" | "desc") => {
     setSort(value);

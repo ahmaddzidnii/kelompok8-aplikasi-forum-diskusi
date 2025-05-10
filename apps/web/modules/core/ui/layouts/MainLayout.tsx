@@ -7,13 +7,13 @@ interface MainLayoutProps {
 }
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <div className="px-2 xl:px-0">
+    <div>
       <MainNavbar />
       <MobileSidebar />
-      <div className="mx-auto grid min-h-screen max-w-screen-xl grid-cols-[0px_minmax(0,_1fr)] pt-5 md:grid-cols-[210px_24px_minmax(0,_1fr)] lg:grid-cols-[240px_28px_minmax(0,_1fr)]">
+      <div className="mx-auto grid min-h-screen max-w-screen-xl grid-cols-[0px_minmax(0,_1fr)] px-2 md:grid-cols-[210px_24px_minmax(0,_1fr)] lg:grid-cols-[240px_28px_minmax(0,_1fr)] xl:px-0">
         <MainSidebar />
         &nbsp;
-        <main>{children}</main>
+        <main className="pt-2">{children}</main>
       </div>
       <Footer />
     </div>

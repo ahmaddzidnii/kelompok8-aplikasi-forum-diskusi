@@ -14,7 +14,7 @@ export const CardAnswerSection = () => {
             <AvatarFallback>AI</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <Link href="/threads/ask">
+            <Link href="/questions/ask">
               <div className="flex h-10 w-full cursor-pointer items-center rounded-xl border">
                 <span className="ml-2 text-sm text-muted-foreground">
                   Tanyakan Sesuatu?
@@ -22,7 +22,7 @@ export const CardAnswerSection = () => {
               </div>
             </Link>
             <Button className="mt-2 w-full" variant="outline" asChild>
-              <Link href="/threads/ask">Tanyakan</Link>
+              <Link href="/questions/ask">Tanyakan</Link>
             </Button>
           </div>
         </div>
