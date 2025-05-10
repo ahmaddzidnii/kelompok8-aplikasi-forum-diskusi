@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 
+import { IoLogIn } from "react-icons/io5";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipWrapper } from "@/components/TooltipWrapper";
 
 export const UserButton = () => {
   const { data, status } = useSession();
@@ -28,9 +31,16 @@ export const UserButton = () => {
 
   if (!data && status === "unauthenticated") {
     return (
-      <Button variant="outline" className="rounded-full">
-        <Link href={`/auth/login`}>Login</Link>
-      </Button>
+      <TooltipWrapper content="Login">
+        <Button variant="outline" className="rounded-full [&_svg]:size-6">
+          <Link href={`/auth/login`}>
+            <div className="flex items-center gap-2">
+              <IoLogIn />
+              <span className="hidden md:block">Login</span>
+            </div>
+          </Link>
+        </Button>
+      </TooltipWrapper>
     );
   }
 
@@ -68,13 +78,19 @@ export const UserButton = () => {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           {menuItems[0].map((item) => (
-            <DropdownMenuItem asChild key={item.label}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              asChild
+              key={item.label}
+            >
               <Link href={item.href}>{item.label}</Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => signOut()}>
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

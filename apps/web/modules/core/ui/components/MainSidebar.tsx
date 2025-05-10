@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FaCircleQuestion } from "react-icons/fa6";
 import { FaBookmark, FaHome } from "react-icons/fa";
 import { RiQuestionAnswerFill } from "react-icons/ri";
 
@@ -17,7 +18,12 @@ const menuItems = [
     icon: FaHome,
   },
   {
-    path: "/threads/bookmark",
+    path: "/questions",
+    label: "Pertanyaan anda",
+    icon: FaCircleQuestion,
+  },
+  {
+    path: "/bookmarks",
     label: "Jawaban tersimpan",
     icon: FaBookmark,
   },
@@ -62,7 +68,7 @@ export const MobileSidebar = () => {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
   return (
-    <nav className="fixed bottom-0 left-0 z-50 grid h-16 w-full grid-cols-3 border-t bg-white px-2 shadow-md md:hidden">
+    <nav className="fixed bottom-0 left-0 z-50 grid h-16 w-full grid-cols-4 border-t bg-white px-2 shadow-md md:hidden">
       {menuItems.map((item) => (
         <Button
           key={item.path}

@@ -16,7 +16,7 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
     <>
       {/* User profile mobile device */}
       <Card className="overflow-hidden md:hidden">
-        <div className="h-32 bg-gradient-to-t from-primary/35 to-secondary"></div>
+        <div className="h-32 bg-[linear-gradient(180deg,_#3B83F6,_#4FE04D)]"></div>
         <CardContent className="relative pt-0">
           <div className="flex items-start justify-between">
             <Avatar className="-mt-12 size-24 border-4 border-background bg-background">
@@ -31,29 +31,29 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
 
           <div className="mt-4 space-y-4">
             <div>
-              <h1 className="text-2xl font-bold">{user.name || "Ahmad Zidni Hidayat"}</h1>
-              <p className="text-muted-foreground">{user.username || "ahmaddzidnii"}</p>
+              <h1 className="text-2xl font-bold">
+                {user.name || "Ahmad Zidni Hidayat"}
+              </h1>
+              <p className="text-muted-foreground">
+                {user.username || "ahmaddzidnii"}
+              </p>
             </div>
             <Button className="w-full" variant="outline" asChild>
               <Link href="/settings/profile">Edit Profile</Link>
             </Button>
-            <p>
-              {user.bio || "Belum ada bio yang ditambahkan."}
-            </p>
-            {
-              user.location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>{user.location}</span>
-                </div>
-              )}
+            <p>{user.bio || "Belum ada bio yang ditambahkan."}</p>
+            {user.location && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>{user.location}</span>
+              </div>
+            )}
             {user.organization && (
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4" />
                 <span>{user.organization}</span>
               </div>
-            )
-            }
+            )}
 
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -67,12 +67,11 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
               </span>
             </div>
           </div>
-
         </CardContent>
-      </Card >
+      </Card>
 
       {/* User profile desktop device */}
-      <div className="hidden w-full shrink-0 space-y-5 md:block" >
+      <div className="hidden w-full shrink-0 space-y-5 md:block">
         <Avatar className=":size-[296px] aspect-square size-[256px] overflow-hidden rounded-full border-[5px] border-muted md:block">
           <AvatarImage
             src={user?.image || "https://avatar.iran.liara.run/public"}
@@ -85,22 +84,18 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
           <h1 className="text-2xl font-bold">{user.name}</h1>
           <p className="text-lg text-muted-foreground">{user.username}</p>
         </div>
-        {
-          session?.user.id === user.id && (
-            <Button className="w-full" variant="outline" asChild>
-              <Link href="/settings/profile">Edit Profile</Link>
-            </Button>
-          )
-        }
-        {
-          user.bio ? (
-            <p className="line-clamp-4 text-muted-foreground">{user.bio}</p>
-          ) : (
-            <p className="line-clamp-4 text-muted-foreground">
-              Belum ada bio yang ditambahkan.
-            </p>
-          )
-        }
+        {session?.user.id === user.id && (
+          <Button className="w-full" variant="outline" asChild>
+            <Link href="/settings/profile">Edit Profile</Link>
+          </Button>
+        )}
+        {user.bio ? (
+          <p className="line-clamp-4 text-muted-foreground">{user.bio}</p>
+        ) : (
+          <p className="line-clamp-4 text-muted-foreground">
+            Belum ada bio yang ditambahkan.
+          </p>
+        )}
         <div className="space-y-2 text-sm">
           {user.location && (
             <div className="flex items-center gap-2">
@@ -126,7 +121,7 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
             </span>
           </div>
         </div>
-      </div >
+      </div>
     </>
   );
 };
