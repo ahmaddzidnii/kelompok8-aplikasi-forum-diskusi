@@ -1,6 +1,7 @@
-import NextAuth, { DefaultSession } from "next-auth";
-import Google from "next-auth/providers/google";
+import { type Role } from "@prisma/client";
 import Github from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import NextAuth, { DefaultSession } from "next-auth";
 
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { generateFromEmail } from "unique-username-generator";
@@ -15,6 +16,7 @@ declare module "next-auth" {
     user: {
       /** The user username */
       username: string;
+      role: Role;
 
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.

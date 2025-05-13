@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { BsPencilSquare } from "react-icons/bs";
 
@@ -9,34 +10,48 @@ import { ListsAnswerSection } from "../section/ListsAnswerSection";
 import { Card, CardContent } from "@/components/ui/card";
 import { AvatarComponent } from "@/components/AvatarComponent";
 import { auth } from "@/auth";
+import { trpc } from "@/trpc/server";
+import logger from "@/lib/logger";
 
 interface ThreadViewProps {
   threadSlug?: string;
 }
 
 export const ThreadView = async ({ threadSlug }: ThreadViewProps) => {
-  console.log({ threadSlug }, "ThreadViewComponent");
-
-  const session = await auth();
+  let question, session;
+  try {
+    const questionData = await trpc.questions.getOne({
+      slug: threadSlug as string,
+    });
+    question = questionData;
+    const sessionData = await auth();
+    session = sessionData;
+  } catch (error) {
+    logger.warn("Error fetching question:", error);
+    return notFound();
+  }
 
   return (
     <div className="space-y-4">
       <QuestionCard
+        truncated={false}
         author={{
-          username: "ahmaddzidnii",
-          name: "Ahmad Zidni Hidayat",
-          avatar: "/avatar.png",
-          organization: "Web Developer at Lorem .inc",
+          username: question.user.username || "ahmaddzidnii",
+          name: question.user.name || "Ahmad Zidni Hidayat",
+          avatar: question.user.image || "/avatar.png",
+          organization:
+            question.user.organization || "Web Developer at Lorem .inc",
         }}
         question={{
-          questonSlug: "/threads/mengapa-react-js-sangat-popular-637353",
-          content: "Mengapa React JS sangat populer?",
+          questonSlug:
+            question.slug || "/threads/mengapa-react-js-sangat-popular-637353",
+          content: question.content || "Mengapa React JS sangat populer?",
         }}
-        createdAt="2 hari yang lalu"
+        createdAt={question.createdAt.toString()}
         withButton={false}
       />
 
-      {session?.user && (
+      {session?.user && question.user.id != session.user.id && (
         <Card className="w-full rounded-lg border">
           <CardContent className="flex h-full w-full items-center justify-center gap-4 p-2">
             <div className="flex flex-col items-center justify-center gap-1 text-center">
@@ -54,7 +69,7 @@ export const ThreadView = async ({ threadSlug }: ThreadViewProps) => {
                 ini.
               </p>
               <Button size="sm" variant="outline">
-                <Link href="/answer">
+                <Link href="/answers">
                   <div className="flex items-center gap-2">
                     <BsPencilSquare />
                     <span className="ml-2">Jawab</span>

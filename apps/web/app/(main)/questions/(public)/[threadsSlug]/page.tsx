@@ -1,5 +1,5 @@
 import { HydrateClient } from "@/trpc/server";
-import { ThreadView } from "@/modules/threads/ui/views/ThreadView";
+import { ThreadView } from "@/modules/questions/ui/views/ThreadView";
 
 interface ThreadsDetailProps {
   params: {

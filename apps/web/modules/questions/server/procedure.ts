@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "@/trpc/init";
 
 import { askFormSchema } from "@/modules/questions/schema";
 import { generateQuestion } from "./services/generateQuestion";
@@ -86,5 +90,40 @@ export const questionsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
         });
       }
+    }),
+  getOne: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { slug } = input;
+
+      const question = await prisma.questions.findUnique({
+        where: {
+          slug,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              image: true,
+              organization: true,
+            },
+          },
+        },
+      });
+
+      if (!question) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Question not found",
+        });
+      }
+
+      return question;
     }),
 });

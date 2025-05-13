@@ -13,7 +13,7 @@ export const BookmarkList = () => {
               avatar: "/avatar.png",
               bio: "Founder at youtube .inc",
             }}
-            createdAt="2 hari yang lalu"
+            createdAt="2023-10-01T12:00:00Z"
             question={{
               questonSlug: "/threads/mengapa-react-js-sangat-popular-637353",
               content: "Mengapa React JS sangat populer?",

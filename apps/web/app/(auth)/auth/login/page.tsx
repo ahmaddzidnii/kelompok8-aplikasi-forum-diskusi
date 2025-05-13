@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { config } from "@/config";
 import { Button } from "@/components/ui/button";
 import Typewriter from "@/components/TypeWriter";
+import { ApplicationLogoWithBrand } from "@/components/ApplicationLogo";
 
 interface LoginPageProps {
   searchParams: { next?: string };
@@ -29,9 +30,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
         <div className="flex w-full flex-col justify-center px-8 md:px-16 lg:w-1/2 lg:px-24">
           <div className="mx-auto w-full max-w-md">
             <div className="mb-8">
-              <h1 className="text-2xl font-medium">
-                Forum<span className="text-blue-500">diskusi</span>.
-              </h1>
+              <ApplicationLogoWithBrand />
             </div>
 
             <h2 className="mb-2 text-3xl font-bold">Login Akun</h2>
