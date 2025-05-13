@@ -35,7 +35,7 @@ const CategoriesSectionSuspense = ({ categoryId }: CategoriesSectionProps) => {
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
 
   const data = categories.map((category) => ({
-    value: category.id,
+    value: category.categoryId,
     label: category.name,
   }));
 

@@ -2,13 +2,14 @@
 
 import { z } from "zod";
 import { Suspense } from "react";
+import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { AutosizeTextarea } from "@/components/ui/textarea-auto-size";
 
 import {
@@ -23,8 +24,7 @@ import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 
 import { trpc } from "@/trpc/client";
 
-import { askFormSchema } from "../../schema";
-
+import { askFormSchema } from "@/modules/questions/schema";
 export const AskForm = () => {
   return (
     <Suspense fallback={<Loader2 className="h-4 w-4 animate-spin" />}>
@@ -36,10 +36,11 @@ export const AskForm = () => {
 };
 export const AskFormSuspense = () => {
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
+  const { mutate, isPending } = trpc.questions.createQuestion.useMutation();
 
   const OPTIONS: Option[] = categories.map((category) => ({
     label: category.name,
-    value: category.id,
+    value: category.categoryId,
   }));
 
   const form = useForm<z.infer<typeof askFormSchema>>({
@@ -51,9 +52,16 @@ export const AskFormSuspense = () => {
   });
 
   function onSubmit(values: z.infer<typeof askFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    mutate(values, {
+      onSuccess: () => {
+        form.reset();
+        toast.success("Pertanyaan berhasil ditambahkan");
+      },
+      onError: (error) => {
+        console.log(error);
+        toast.error("Terjadi kesalahan saat menambahkan pertanyaan");
+      },
+    });
   }
   return (
     <Form {...form}>
@@ -87,7 +95,7 @@ export const AskFormSuspense = () => {
                 <AutosizeTextarea
                   className="w-full resize-none"
                   placeholder="Mulailah pertanyaan Anda dengan 'Apa', 'Bagaimana', 'Mengapa', dll."
-                  maxHeight={500}
+                  maxHeight={300}
                   minHeight={200}
                   value={field.value}
                   onChange={(e) => field.onChange(e)}
@@ -100,9 +108,15 @@ export const AskFormSuspense = () => {
         />
 
         <div className="mt-5 flex md:justify-end">
-          <Button className="w-full md:w-auto" size="sm" type="submit">
+          <LoadingButton
+            loading={isPending}
+            className="w-full md:w-auto"
+            size="sm"
+            type="submit"
+            disabled={!form.formState.isValid}
+          >
             Tambah pertanyaan
-          </Button>
+          </LoadingButton>
         </div>
       </form>
     </Form>

@@ -26,7 +26,7 @@ export const ThreadView = async ({ threadSlug }: ThreadViewProps) => {
           username: "ahmaddzidnii",
           name: "Ahmad Zidni Hidayat",
           avatar: "/avatar.png",
-          bio: "Web Developer at Lorem .inc",
+          organization: "Web Developer at Lorem .inc",
         }}
         question={{
           questonSlug: "/threads/mengapa-react-js-sangat-popular-637353",

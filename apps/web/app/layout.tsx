@@ -30,7 +30,7 @@ export default function RootLayout({
       <body style={roboto.style} className={cn("min-w-[320px] antialiased")}>
         <NextTopLoader showSpinner={false} />
         <ToastContainer
-          position="top-right"
+          position="bottom-left"
           autoClose={5000}
           hideProgressBar={false}
           newestOnTop={false}

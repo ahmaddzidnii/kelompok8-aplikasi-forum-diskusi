@@ -1,6 +1,7 @@
 import NextAuth, { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { generateFromEmail } from "unique-username-generator";
 

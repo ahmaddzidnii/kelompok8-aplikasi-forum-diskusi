@@ -9,7 +9,7 @@ interface QuestionCardProps {
     username: string;
     name: string;
     avatar: string;
-    bio?: string;
+    organization?: string;
   };
   question: {
     questonSlug: string;
@@ -32,11 +32,13 @@ export const QuestionCard = ({
           username={author.username}
           name={author.name}
           avatar={author.avatar}
-          bio={author.bio}
+          bio={author.organization}
           createdAt={createdAt}
         />
 
-        <p className="text-base font-semibold">{question.content}</p>
+        <p className="line-clamp-4 max-h-24 overflow-hidden text-ellipsis text-base font-semibold">
+          {question.content}
+        </p>
         {withButton && (
           <Button variant="default" className="w-full" asChild>
             <Link prefetch={false} href={`/threads/${question.questonSlug}`}>
