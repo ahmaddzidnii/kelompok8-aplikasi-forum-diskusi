@@ -1,9 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { id } from "date-fns/locale";
 import { Loader2Icon } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { config } from "@/config";
