@@ -42,6 +42,11 @@ model Session {
  
   @@map("sessions")
 }
+
+enum Role {
+  USER
+  SUPER_ADMIN
+}
  
 model User {
   id            String    @id @default(ulid())
@@ -49,6 +54,7 @@ model User {
   email         String?   @unique
   username      String?   @unique
   emailVerified DateTime? @map("email_verified")
+  role          Role      @default(USER)
   image         String?
   location      String?
   bio           String?
@@ -106,7 +112,7 @@ model Questions {
 }
 
 model QuestionCategory{
-  questionId String @map("thread_id")
+  questionId String @map("question_id")
   categoryId String @map("category_id")
 
   question Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
@@ -122,7 +128,7 @@ model Answer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  questionId String @map("thread_id")
+  questionId String @map("question_id")
   qusetion Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
 
   userId String @map("user_id")

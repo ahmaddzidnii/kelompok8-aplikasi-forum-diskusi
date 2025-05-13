@@ -9,7 +9,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { config } from "@/config";
 import { trpc } from "@/trpc/client";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
-import { QuestionCard } from "@/modules/threads/ui/components/QuestionCard";
+import { QuestionCard } from "@/modules/questions/ui/components/QuestionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { InternalServerError } from "@/components/InternalServerErrorFallback";
 
@@ -55,10 +55,7 @@ const QuestionsListSuspense = () => {
               organization:
                 question.user.organization || "Web Developer at XYZ",
             }}
-            createdAt={formatDistanceToNow(question.createdAt, {
-              addSuffix: true,
-              locale: id,
-            }).replace(/^sekitar\s+/i, "")}
+            createdAt={question.createdAt.toString()}
           />
         </li>
       ))}
