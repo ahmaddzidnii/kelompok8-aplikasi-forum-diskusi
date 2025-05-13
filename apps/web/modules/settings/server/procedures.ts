@@ -64,10 +64,12 @@ export const settingsRouter = createTRPCRouter({
     }
 
     try {
-      await prisma.user.delete({
-        where: {
-          id: ctx.session.user.id,
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.user.delete({
+          where: {
+            id: ctx.session?.user.id,
+          },
+        });
       });
 
       return { status: "OK" };

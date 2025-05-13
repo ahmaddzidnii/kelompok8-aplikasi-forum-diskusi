@@ -16,21 +16,25 @@ const menuItems = [
     path: "/",
     label: "Beranda",
     icon: FaHome,
+    authRequired: false,
   },
   {
     path: "/questions",
     label: "Pertanyaan anda",
     icon: FaCircleQuestion,
+    authRequired: true,
   },
   {
     path: "/bookmarks",
     label: "Jawaban tersimpan",
     icon: FaBookmark,
+    authRequired: true,
   },
   {
     path: "/answers",
     label: "Jawab pertanyaan",
     icon: RiQuestionAnswerFill,
+    authRequired: true,
   },
 ];
 export const MainSidebar = () => {
