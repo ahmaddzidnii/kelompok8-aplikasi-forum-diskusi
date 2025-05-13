@@ -2,12 +2,13 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { config } from "@/config";
+import { withAuthServerSide } from "@/modules/auth/function/withAuthServerSide";
 
 interface BookmarkPageGuardProps {
   children: React.ReactNode;
 }
 
-const BookmarkPageGuard = async ({ children }: BookmarkPageGuardProps) => {
+const BookmarkLayout = async ({ children }: BookmarkPageGuardProps) => {
   const session = await auth();
 
   if (!session?.user) {
@@ -16,4 +17,4 @@ const BookmarkPageGuard = async ({ children }: BookmarkPageGuardProps) => {
   return <>{children}</>;
 };
 
-export default BookmarkPageGuard;
+export default withAuthServerSide(BookmarkLayout);

@@ -1,5 +1,5 @@
 import { HydrateClient, trpc } from "@/trpc/server";
-import { AskQuestionView } from "@/modules/asks/ui/views/AskQuestionView";
+import { AskQuestionView } from "@/modules/questions/ui/views/AskQuestionView";
 
 export const metadata = {
   title: "Tanyakan sesuatu",
