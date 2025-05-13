@@ -12,6 +12,7 @@ const QuestionsPage = () => {
   void trpc.questions.getMany.prefetchInfinite({
     limit: config.questions.defaultLimit,
   });
+
   return (
     <HydrateClient>
       <QuestionsView />
