@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { id } from "date-fns/locale";
+import { formatDistanceToNow } from "date-fns";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -27,7 +29,12 @@ export const UserMeta = ({
         <div>
           <p className="text-base font-semibold">{name}</p>
           <p className="text-sm text-muted-foreground">
-            {bio} • {createdAt}
+            {bio} •&nbsp;
+            {formatDistanceToNow(createdAt, {
+              addSuffix: true,
+              locale: id,
+              includeSeconds: true,
+            }).replace(/^sekitar\s+/i, "")}
           </p>
         </div>
       </div>

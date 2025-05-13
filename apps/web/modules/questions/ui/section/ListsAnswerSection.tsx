@@ -1,6 +1,6 @@
 "use client";
 
-import { AnswerCard } from "@/modules/threads/ui/components/AnswerCard";
+import { AnswerCard } from "@/modules/questions/ui/components/AnswerCard";
 import { CommentProvider } from "@/modules/comments/context/CommentContext";
 
 export const ListsAnswerSection = () => {
@@ -16,7 +16,7 @@ export const ListsAnswerSection = () => {
               avatar: "/avatar.png",
               bio: "Founder at youtube .inc",
             }}
-            createdAt="2 hari yang lalu"
+            createdAt="2023-10-01T12:00:00Z"
             count={{
               upVote: 10,
               comment: 5,
@@ -34,7 +34,7 @@ export const ListsAnswerSection = () => {
               avatar: "/avatar.png",
               bio: "Founder at youtube .inc",
             }}
-            createdAt="2 hari yang lalu"
+            createdAt="2023-10-01T12:00:00Z"
             count={{
               upVote: 10,
               comment: 5,

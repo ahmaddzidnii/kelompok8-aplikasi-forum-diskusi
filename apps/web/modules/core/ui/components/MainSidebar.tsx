@@ -19,7 +19,7 @@ const menuItems = [
     authRequired: false,
   },
   {
-    path: "/questions",
+    path: "/questions/my-question",
     label: "Pertanyaan anda",
     icon: FaCircleQuestion,
     authRequired: true,

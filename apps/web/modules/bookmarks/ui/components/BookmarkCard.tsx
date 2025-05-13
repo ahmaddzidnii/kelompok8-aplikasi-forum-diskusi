@@ -2,7 +2,7 @@ import { FaBookmark } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserMeta } from "@/modules/threads/ui/components/UserMeta";
+import { UserMeta } from "@/modules/questions/ui/components/UserMeta";
 import Link from "next/link";
 
 interface BookmarkCardProps {
