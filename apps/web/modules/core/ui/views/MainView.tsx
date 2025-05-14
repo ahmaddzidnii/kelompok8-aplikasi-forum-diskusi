@@ -11,7 +11,7 @@ export const MainView = ({ categoryId }: MainViewProps) => {
     <div className="flex flex-col gap-4 px-2">
       <CategoriesSection categoryId={categoryId} />
       <CardAnswerSection />
-      <ThreadsListSection />
+      <ThreadsListSection categoryId={categoryId} />
     </div>
   );
 };
