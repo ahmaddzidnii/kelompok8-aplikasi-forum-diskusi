@@ -11,6 +11,9 @@ interface HomePageProps {
 
 const HomePage = ({ searchParams }: HomePageProps) => {
   void trpc.categories.getMany.prefetch();
+  void trpc.questions.getRecommended.prefetchInfinite({
+    categoryId: searchParams.categoryId,
+  });
   return (
     <HydrateClient>
       <MainView categoryId={searchParams.categoryId} />
