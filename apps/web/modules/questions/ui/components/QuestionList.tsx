@@ -13,7 +13,7 @@ import { InternalServerError } from "@/components/InternalServerErrorFallback";
 
 export const QuestionsList = () => {
   return (
-    <Suspense fallback={<Loader2Icon size={48} className="animate-spin" />}>
+    <Suspense fallback={<Loader2Icon size={24} className="animate-spin" />}>
       <ErrorBoundary fallback={<InternalServerError />}>
         <QuestionsListSuspense />
       </ErrorBoundary>
