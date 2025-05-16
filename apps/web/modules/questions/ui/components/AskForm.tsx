@@ -38,6 +38,7 @@ export const AskFormSuspense = () => {
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const { mutate, isPending } = trpc.questions.createQuestion.useMutation();
   const router = useRouter();
+  const trpcUtils = trpc.useUtils();
 
   const OPTIONS: Option[] = categories.map((category) => ({
     label: category.name,
@@ -56,6 +57,7 @@ export const AskFormSuspense = () => {
     mutate(values, {
       onSuccess: ({ slug }) => {
         form.reset();
+        trpcUtils.questions.getMany.invalidate();
         toast.success("Pertanyaan berhasil ditambahkan");
         router.push(`/questions/${slug}`);
       },

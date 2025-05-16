@@ -41,39 +41,6 @@ const ThreadsListSectionSuspense = ({
     return <EmptyState />;
   }
 
-
-
-export const ThreadsListSection = ({ categoryId }: { categoryId?: string }) => {
-  return (
-    <Suspense fallback={<Loader2Icon size={24} className="animate-spin" />}>
-      <ErrorBoundary fallback={<InternalServerError />}>
-        <ThreadsListSectionSuspense categoryId={categoryId} />
-      </ErrorBoundary>
-    </Suspense>
-  );
-};
-
-const ThreadsListSectionSuspense = ({
-  categoryId,
-}: {
-  categoryId?: string;
-}) => {
-  const [data, query] = trpc.questions.getRecommended.useSuspenseInfiniteQuery(
-    {
-      categoryId,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
-
-  const questions = data.pages.flatMap((page) => page.questions);
-
-  if (questions.length === 0) {
-    return <EmptyState />;
-  }
-
-
   return (
     <ul>
       {questions.map((question, idx) => (
