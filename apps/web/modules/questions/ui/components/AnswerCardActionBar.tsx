@@ -9,6 +9,7 @@ interface AnswerCardActionBarProps {
   count: {
     upVote: number;
     comment: number;
+    isBookmarked: boolean;
   };
 }
 
@@ -33,10 +34,17 @@ export const AnswerCardActionBar = ({ count }: AnswerCardActionBarProps) => {
         <FaComment />
         <span>{count.comment}</span>
       </Button>
-      <Button size="sm" variant="ghost" className="rounded-full text-xs">
-        <FaBookmark />
-        <span>Simpan</span>
-      </Button>
+      {count.isBookmarked ? (
+        <Button size="sm" variant="ghost" className="rounded-full text-xs">
+          <FaBookmark />
+          <span>Hapus dari simpan</span>
+        </Button>
+      ) : (
+        <Button size="sm" variant="ghost" className="rounded-full text-xs">
+          <FaBookmark />
+          <span>Simpan</span>
+        </Button>
+      )}
     </div>
   );
 };

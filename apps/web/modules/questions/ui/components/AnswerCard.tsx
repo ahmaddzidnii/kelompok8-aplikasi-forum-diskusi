@@ -16,6 +16,7 @@ interface AnswerCardProps {
   count: {
     upVote: number;
     comment: number;
+    isBookmarked: boolean;
   };
   createdAt: string;
 }

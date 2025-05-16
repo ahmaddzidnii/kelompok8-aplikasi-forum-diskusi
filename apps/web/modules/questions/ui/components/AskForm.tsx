@@ -4,10 +4,9 @@ import { z } from "zod";
 import { Suspense } from "react";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorBoundary } from "react-error-boundary";
-
-import { Loader2 } from "lucide-react";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AutosizeTextarea } from "@/components/ui/textarea-auto-size";
@@ -25,9 +24,10 @@ import MultipleSelector, { Option } from "@/components/ui/multiple-selector";
 import { trpc } from "@/trpc/client";
 
 import { askFormSchema } from "@/modules/questions/schema";
+import { Loader } from "@/components/Loader";
 export const AskForm = () => {
   return (
-    <Suspense fallback={<Loader2 className="h-4 w-4 animate-spin" />}>
+    <Suspense fallback={<Loader />}>
       <ErrorBoundary fallback={<div>Terjadi kesalahan saat memuat form</div>}>
         <AskFormSuspense />
       </ErrorBoundary>
@@ -37,6 +37,7 @@ export const AskForm = () => {
 export const AskFormSuspense = () => {
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const { mutate, isPending } = trpc.questions.createQuestion.useMutation();
+  const router = useRouter();
 
   const OPTIONS: Option[] = categories.map((category) => ({
     label: category.name,
@@ -53,9 +54,10 @@ export const AskFormSuspense = () => {
 
   function onSubmit(values: z.infer<typeof askFormSchema>) {
     mutate(values, {
-      onSuccess: () => {
+      onSuccess: ({ slug }) => {
         form.reset();
         toast.success("Pertanyaan berhasil ditambahkan");
+        router.push(`/questions/${slug}`);
       },
       onError: (error) => {
         console.log(error);

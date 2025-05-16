@@ -10,6 +10,7 @@ interface UserMetaProps {
   avatar: string;
   bio?: string;
   createdAt: string;
+  withBio?: boolean;
 }
 
 export const UserMeta = ({
@@ -18,24 +19,27 @@ export const UserMeta = ({
   avatar,
   bio,
   createdAt,
+  withBio = true,
 }: UserMetaProps) => {
   return (
     <Link prefetch={false} href={`/@${username}`}>
-      <div className="flex w-full gap-2">
+      <div className="flex w-full items-center gap-2">
         <Avatar>
           <AvatarImage src={avatar} />
-          <AvatarFallback>&nbsp;</AvatarFallback>
+          <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div>
           <p className="text-base font-semibold">{name}</p>
-          <p className="text-sm text-muted-foreground">
-            {bio} •&nbsp;
-            {formatDistanceToNow(createdAt, {
-              addSuffix: true,
-              locale: id,
-              includeSeconds: true,
-            }).replace(/^sekitar\s+/i, "")}
-          </p>
+          {withBio && (
+            <p className="text-sm text-muted-foreground">
+              {bio} •&nbsp;
+              {formatDistanceToNow(createdAt, {
+                addSuffix: true,
+                locale: id,
+                includeSeconds: true,
+              }).replace(/^\s*\D*?(\d+.*)/, "$1")}
+            </p>
+          )}
         </div>
       </div>
     </Link>

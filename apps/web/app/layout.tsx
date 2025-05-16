@@ -39,6 +39,9 @@ export default function RootLayout({
           pauseOnFocusLoss={false}
           draggable
           pauseOnHover={false}
+          style={{
+            zIndex: 999999,
+          }}
           transition={Bounce}
         />
 

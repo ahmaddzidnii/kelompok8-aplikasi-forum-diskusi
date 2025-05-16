@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Loader2Icon } from "lucide-react";
 
-import { LoadingButton } from "@/components/ui/loading-button";
+import { Button } from "@/components/ui/button";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 interface InfiniteScrollProps {
@@ -55,14 +55,13 @@ export const InfiniteScroll = ({
       {isFetchingNextPage && <Loader2Icon size={24} className="animate-spin" />}
 
       {hasNextPage && isManual && (
-        <LoadingButton
+        <Button
           variant="secondary"
-          loading={isFetchingNextPage}
           disabled={isFetchingNextPage}
           onClick={fetchNextPage}
         >
           Muat lebih banyak
-        </LoadingButton>
+        </Button>
       )}
 
       {/* {!hasNextPage && <p>Kamu telah mencapai akhir dari data</p>} */}

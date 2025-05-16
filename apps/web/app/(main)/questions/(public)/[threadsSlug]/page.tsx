@@ -1,19 +1,25 @@
-import { HydrateClient } from "@/trpc/server";
-import { ThreadView } from "@/modules/questions/ui/views/ThreadView";
+import { HydrateClient, trpc } from "@/trpc/server";
+import { QuestionDetail } from "@/modules/questions/ui/views/QuestionDetail";
+import { config } from "@/config";
 
-interface ThreadsDetailProps {
+interface QuestionDetailPageProps {
   params: {
     threadsSlug: string;
   };
 }
 
-const ThreadsDetail = ({ params }: ThreadsDetailProps) => {
-  // TODO: prefetch thread detail data
+export const dynamic = "force-dynamic";
+
+const QuestionDetailPage = ({ params }: QuestionDetailPageProps) => {
+  void trpc.answers.getMany.prefetchInfinite({
+    questionSlug: params.threadsSlug,
+    limit: config.answers.defaultLimit,
+  });
   return (
     <HydrateClient>
-      <ThreadView threadSlug={params.threadsSlug} />
+      <QuestionDetail threadSlug={params.threadsSlug} />
     </HydrateClient>
   );
 };
 
-export default ThreadsDetail;
+export default QuestionDetailPage;

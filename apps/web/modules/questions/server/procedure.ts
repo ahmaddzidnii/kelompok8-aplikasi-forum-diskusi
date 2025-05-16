@@ -3,14 +3,13 @@ import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
+  dynamicProcedure,
   protectedProcedure,
-  publicProcedure,
 } from "@/trpc/init";
 
 import { askFormSchema } from "@/modules/questions/schema";
 import { generateQuestion } from "./services/generateQuestion";
 import { prisma } from "@/lib/prisma";
-import { getRecommendedQuestions } from "./services/getRecommendedQuestions";
 import { config } from "@/config";
 
 export const questionsRouter = createTRPCRouter({
@@ -18,9 +17,10 @@ export const questionsRouter = createTRPCRouter({
     .input(askFormSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        await generateQuestion(input, ctx.session);
+        const questionSlug = await generateQuestion(input, ctx.session);
         return {
           message: "Ask created successfully",
+          slug: questionSlug,
         };
       } catch (error) {
         console.error("Error creating ask:", error);
@@ -93,14 +93,15 @@ export const questionsRouter = createTRPCRouter({
         });
       }
     }),
-  getOne: publicProcedure
+  getOne: dynamicProcedure
     .input(
       z.object({
         slug: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { slug } = input;
+      const { session } = ctx;
 
       const question = await prisma.questions.findUnique({
         where: {
@@ -119,6 +120,18 @@ export const questionsRouter = createTRPCRouter({
         },
       });
 
+      const isAnswered = await prisma.answers.findFirst({
+        where: {
+          questionId: question?.questionId,
+          userId: session?.user.id,
+        },
+        select: {
+          answerId: true, // cukup ambil ID-nya saja
+        },
+      });
+
+      const hasAnswered = !!isAnswered;
+
       if (!question) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -126,24 +139,56 @@ export const questionsRouter = createTRPCRouter({
         });
       }
 
-      return question;
+      return {
+        ...question,
+        hasAnswered,
+      };
     }),
-  getRecommended: publicProcedure
+  getRecommended: dynamicProcedure
     .input(
       z.object({
         categoryId: z.string().optional(),
         cursor: z.string().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { categoryId, cursor } = input;
-      const { session } = ctx;
+      // const { session } = ctx;
 
-      return await getRecommendedQuestions({
-        userId: session?.user.id,
-        categoryId,
-        cursor,
-        limit: config.questions.defaultLimit,
+      const questions = await prisma.questions.findMany({
+        where: {
+          questionCategory: {
+            some: {
+              categoryId: categoryId,
+            },
+          },
+        },
+
+        take: config.questions.defaultLimit + 1,
+        cursor: cursor ? { questionId: cursor } : undefined,
+        orderBy: {
+          updatedAt: "desc",
+        },
+
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              image: true,
+              organization: true,
+            },
+          },
+        },
       });
+
+      return {
+        items: questions,
+        nextCursor:
+          questions.length > config.questions.defaultLimit
+            ? questions[questions.length - 1].questionId
+            : null,
+      };
     }),
 });
