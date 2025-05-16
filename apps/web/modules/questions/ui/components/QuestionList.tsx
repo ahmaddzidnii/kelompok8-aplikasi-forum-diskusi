@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense } from "react";
+
+
 import { ErrorBoundary } from "react-error-boundary";
 
 import { config } from "@/config";
@@ -13,7 +15,9 @@ import { Loader } from "@/components/Loader";
 
 export const QuestionsList = () => {
   return (
+
     <Suspense fallback={<Loader />}>
+
       <ErrorBoundary fallback={<InternalServerError />}>
         <QuestionsListSuspense />
       </ErrorBoundary>

@@ -10,6 +10,8 @@ import {
 import { askFormSchema } from "@/modules/questions/schema";
 import { generateQuestion } from "./services/generateQuestion";
 import { prisma } from "@/lib/prisma";
+
+
 import { config } from "@/config";
 
 export const questionsRouter = createTRPCRouter({
@@ -190,5 +192,23 @@ export const questionsRouter = createTRPCRouter({
             ? questions[questions.length - 1].questionId
             : null,
       };
+    }),
+  getRecommended: publicProcedure
+    .input(
+      z.object({
+        categoryId: z.string().optional(),
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { categoryId, cursor } = input;
+      const { session } = ctx;
+
+      return await getRecommendedQuestions({
+        userId: session?.user.id,
+        categoryId,
+        cursor,
+        limit: config.questions.defaultLimit,
+      });
     }),
 });
