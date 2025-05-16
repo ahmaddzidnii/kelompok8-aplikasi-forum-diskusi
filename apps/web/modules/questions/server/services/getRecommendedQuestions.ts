@@ -34,7 +34,7 @@ export async function getRecommendedQuestions({
 
   if (userId) {
     // 1. Mendapatkan pertanyaan yang sudah diinteraksi oleh user
-    const interacted = await prisma.answer.findMany({
+    const interacted = await prisma.answers.findMany({
       where: {
         OR: [
           { savedAnswers: { some: { userId } } },

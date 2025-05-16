@@ -1,27 +1,24 @@
 import { z } from "zod";
 import { type Session } from "next-auth";
 import { TRPCError } from "@trpc/server";
-import { prisma } from "@/lib/prisma";
 
+import { prisma } from "@/lib/prisma";
 import { askFormSchema } from "@/modules/questions/schema";
 import { generateSlug } from "./generateSlug";
 
 export const generateQuestion = async (
   input: z.infer<typeof askFormSchema>,
   session: Session | null,
-) => {
-  const { categories, questionContent } = input;
-  await prisma.$transaction(async (tx) => {
-    // check if the categories are valid
-    const existingCategories = await tx.category.findMany({
-      where: {
-        categoryId: { in: categories.map((category) => category.value) },
-      },
-      select: {
-        categoryId: true,
-      },
-    });
+): Promise<string> => {
+  // kita akan return slug sebagai string
+  const slug = await prisma.$transaction(async (tx) => {
+    const { categories, questionContent } = input;
 
+    // validasi kategori
+    const existingCategories = await tx.category.findMany({
+      where: { categoryId: { in: categories.map((c) => c.value) } },
+      select: { categoryId: true },
+    });
     if (existingCategories.length !== categories.length) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -29,29 +26,28 @@ export const generateQuestion = async (
       });
     }
 
-    // Create the question
+    // buat question
     const question = await tx.questions.create({
       data: {
         slug: generateSlug(questionContent.split(" ").slice(0, 10).join(" ")),
         content: questionContent,
-        user: {
-          connect: {
-            id: session?.user.id,
-          },
-        },
+        user: { connect: { id: session?.user.id } },
       },
     });
 
-    // Create the threadCategory records
+    // buat relasi kategori
     const questionCategoryData = categories.map((category) => ({
       questionId: question.questionId,
       categoryId: category.value,
     }));
-
-    // Create the threadCategory records
     await tx.questionCategory.createMany({
       data: questionCategoryData,
       skipDuplicates: true,
     });
+
+    // return slug yang baru dibuat
+    return question.slug;
   });
+
+  return slug;
 };

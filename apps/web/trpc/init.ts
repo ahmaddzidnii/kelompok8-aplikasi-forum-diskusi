@@ -46,3 +46,11 @@ export const protectedProcedure = t.procedure.use(
     });
   },
 );
+export const dynamicProcedure = t.procedure.use(async function isAuthed(opts) {
+  const { ctx } = opts;
+  return opts.next({
+    ctx: {
+      ...ctx,
+    },
+  });
+});

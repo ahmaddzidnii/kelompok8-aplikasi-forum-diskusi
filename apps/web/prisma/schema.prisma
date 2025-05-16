@@ -65,7 +65,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   questions     Questions[]
-  answers       Answer[]
+  answers       Answers[]
   savedAnswers  SavedAnswer[]
   upvotesAnswer UpvotesAnswer[]
   comments      Comment[]
@@ -105,7 +105,7 @@ model Questions {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   questionCategory QuestionCategory[]
-  answer Answer[]
+  answer Answers[]
 
 
   @@map("questions")
@@ -122,7 +122,7 @@ model QuestionCategory{
   @@map("question_category")
 }
 
-model Answer {
+model Answers {
   answerId String @id @default(ulid()) @map("answer_id")
   content String @db.Text
   createdAt DateTime @default(now()) @map("created_at")
@@ -139,6 +139,7 @@ model Answer {
   comments Comment[]
 
   @@map("answers")
+  @@unique([questionId, userId])
 }
 
 model SavedAnswer {
@@ -146,7 +147,7 @@ model SavedAnswer {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   answerId String @map("answer_id")
-  answer Answer @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
 
   @@id([userId, answerId])
   @@map("saved_answers")
@@ -159,7 +160,7 @@ model UpvotesAnswer {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   answerId String @map("answer_id")
-  answer Answer @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -172,7 +173,7 @@ model Comment {
   userId String @map("user_id")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   answerId String @map("answer_id")
-  answer Answer @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
   parentId String?  @map("parent_id")
   parentComment Comment? @relation("ParentComment", fields: [parentId], references: [commentId], onDelete: Cascade)
   childComments Comment[] @relation("ParentComment")

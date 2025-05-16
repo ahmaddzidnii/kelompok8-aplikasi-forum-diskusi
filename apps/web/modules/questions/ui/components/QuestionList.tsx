@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { Loader2Icon } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { config } from "@/config";
@@ -10,10 +9,11 @@ import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { QuestionCard } from "@/modules/questions/ui/components/QuestionCard";
 import { EmptyState } from "@/components/EmptyState";
 import { InternalServerError } from "@/components/InternalServerErrorFallback";
+import { Loader } from "@/components/Loader";
 
 export const QuestionsList = () => {
   return (
-    <Suspense fallback={<Loader2Icon size={24} className="animate-spin" />}>
+    <Suspense fallback={<Loader />}>
       <ErrorBoundary fallback={<InternalServerError />}>
         <QuestionsListSuspense />
       </ErrorBoundary>

@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import { Loader2Icon } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { trpc } from "@/trpc/client";
@@ -9,10 +8,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
 import { InternalServerError } from "@/components/InternalServerErrorFallback";
 import { QuestionCard } from "@/modules/questions/ui/components/QuestionCard";
+import { Loader } from "@/components/Loader";
 
 export const ThreadsListSection = ({ categoryId }: { categoryId?: string }) => {
   return (
-    <Suspense fallback={<Loader2Icon size={24} className="animate-spin" />}>
+    <Suspense fallback={<Loader />}>
       <ErrorBoundary fallback={<InternalServerError />}>
         <ThreadsListSectionSuspense categoryId={categoryId} />
       </ErrorBoundary>
@@ -34,7 +34,7 @@ const ThreadsListSectionSuspense = ({
     },
   );
 
-  const questions = data.pages.flatMap((page) => page.questions);
+  const questions = data.pages.flatMap((page) => page.items);
 
   if (questions.length === 0) {
     return <EmptyState />;
