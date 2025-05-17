@@ -19,6 +19,19 @@ const LABELS = {
   asc: "Terlama",
 } as const;
 
+function getSortLabel(sort: string) {
+  switch (sort) {
+    case "recommended":
+      return LABELS.recommended;
+    case "desc":
+      return LABELS.desc;
+    case "asc":
+      return LABELS.asc;
+    default:
+      return LABELS.recommended;
+  }
+}
+
 export const AnswerFilter = () => {
   const [answerSort, setAnswerSort] = useQueryState("answerSort", {
     defaultValue: "recommended",
@@ -39,9 +52,7 @@ export const AnswerFilter = () => {
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="outline">
-            <span className="text-[14px]">
-              {LABELS[answerSort as "recommended" | "desc" | "asc"]}
-            </span>
+            <span className="text-[14px]">{getSortLabel(answerSort)}</span>
             <FaChevronDown className="ml-2" />
           </Button>
         </DropdownMenuTrigger>

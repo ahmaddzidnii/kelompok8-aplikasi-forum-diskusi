@@ -89,7 +89,13 @@ export const answersRouter = createTRPCRouter({
           })
           .nullish(),
         limit: z.number().min(1).max(100),
-        sort: z.enum(["asc", "desc", "recommended"]).default("recommended"),
+        sort: z.preprocess(
+          (val) =>
+            ["asc", "desc", "recommended"].includes(val as string)
+              ? val
+              : undefined,
+          z.enum(["asc", "desc", "recommended"]).default("recommended"),
+        ),
       }),
     )
     .query(async ({ input, ctx }) => {
