@@ -206,6 +206,9 @@ export const answersRouter = createTRPCRouter({
           return {
             ...answerWithoutBookmarks,
             isBookmarked: savedAnswers.length > 0,
+            isAlreadyUpvoted: upvotesAnswer.some(
+              (upvote) => upvote.userId === session?.user.id,
+            ),
           };
         });
 
@@ -279,6 +282,12 @@ export const answersRouter = createTRPCRouter({
                 comments: true,
               },
             },
+            upvotesAnswer: {
+              where: {
+                userId: session?.user.id,
+              },
+              take: 1,
+            },
             savedAnswers: {
               where: {
                 userId: session?.user.id,
@@ -294,6 +303,7 @@ export const answersRouter = createTRPCRouter({
           return {
             ...answerWithoutBookmarks,
             isBookmarked: savedAnswers.length > 0,
+            isAlreadyUpvoted: answer.upvotesAnswer.length > 0,
           };
         });
 

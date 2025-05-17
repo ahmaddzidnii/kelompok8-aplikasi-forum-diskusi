@@ -13,22 +13,29 @@ interface AnswerCardProps {
     bio?: string;
   };
   answerContent: string;
+  answerId: string;
   count: {
     upVote: number;
     comment: number;
     isBookmarked: boolean;
   };
   createdAt: string;
+  isAlreadyUpvoted: boolean;
+  answerSort: "asc" | "desc" | "recommended";
+  questionSlug: string;
 }
 
 export const AnswerCard = ({
   author,
   createdAt,
   answerContent,
+  answerId,
   count,
+  isAlreadyUpvoted,
+  answerSort,
+  questionSlug,
 }: AnswerCardProps) => {
   const { isOpen } = useComment();
-
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
@@ -42,7 +49,13 @@ export const AnswerCard = ({
 
         <p className="text-base font-semibold">{answerContent}</p>
 
-        <AnswerCardActionBar count={count} />
+        <AnswerCardActionBar
+          answerId={answerId}
+          count={count}
+          isAlreadyUpvoted={isAlreadyUpvoted}
+          answerSort={answerSort}
+          questionSlug={questionSlug}
+        />
 
         {isOpen && (
           <div className="mt-4">

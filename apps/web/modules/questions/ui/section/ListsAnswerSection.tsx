@@ -59,6 +59,7 @@ const ListsAnswerSectionSuspense = ({
         <li key={answer.answerId + idx}>
           <CommentProvider>
             <AnswerCard
+              answerId={answer.answerId}
               answerContent={answer.content}
               author={{
                 username: answer.user.username as string,
@@ -72,6 +73,9 @@ const ListsAnswerSectionSuspense = ({
                 comment: answer._count.comments,
                 isBookmarked: answer.isBookmarked,
               }}
+              isAlreadyUpvoted={answer.isAlreadyUpvoted}
+              answerSort={answerSort ? answerSort : "recommended"}
+              questionSlug={questionSlug}
             />
           </CommentProvider>
         </li>
