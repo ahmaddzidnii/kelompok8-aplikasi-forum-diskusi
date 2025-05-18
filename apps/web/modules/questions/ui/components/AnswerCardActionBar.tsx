@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "react-toastify";
-import { FaBookmark, FaComment } from "react-icons/fa";
+import { FaBookmark, FaComment, FaRegBookmark } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { useComment } from "@/modules/comments/hooks/UseComment";
@@ -31,10 +31,6 @@ export const AnswerCardActionBar = ({
   const trpcUtils = trpc.useUtils();
   const upVoteMutation = trpc.votes.upVote.useMutation({
     onSuccess: ({ answerId }) => {
-      toast.success(
-        isAlreadyUpvoted ? "Dihapus dari dukungan" : "Didukung naik",
-      );
-
       // Update data in all cache entries that might contain this answer
       trpcUtils.answers.getMany.setInfiniteData(
         {
@@ -79,6 +75,47 @@ export const AnswerCardActionBar = ({
     },
   });
 
+  const bookmarkMutation = trpc.bookmark.bookmark.useMutation({
+    onSuccess: () => {
+      trpcUtils.answers.getMany.setInfiniteData(
+        {
+          limit: config.answers.defaultLimit,
+          sort: answerSort,
+          questionSlug: questionSlug,
+        },
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          // Keep the page structure intact
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              items: page.items.map((item) => {
+                if (item.answerId === answerId) {
+                  return {
+                    ...item,
+                    isBookmarked: !item.isBookmarked,
+                  };
+                }
+                return item;
+              }),
+            })),
+          };
+        },
+      );
+
+      trpcUtils.bookmark.getBookmarks.invalidate();
+    },
+    onError: (error) => {
+      if (error.data?.code === "UNAUTHORIZED") {
+        toast.error("Silakan masuk untuk menyimpan jawaban");
+      } else {
+        toast.error("Terjadi kesalahan, silakan coba lagi");
+      }
+    },
+  });
+
   const handleCommentClick = () => {
     setIsOpen(!isOpen);
   };
@@ -93,6 +130,20 @@ export const AnswerCardActionBar = ({
       upVoteMutation.mutate({
         answerId: answerId,
         type: "upVote",
+      });
+    }
+  };
+
+  const handleBookmarkClick = () => {
+    if (count.isBookmarked) {
+      bookmarkMutation.mutate({
+        answerId,
+        type: "remove",
+      });
+    } else {
+      bookmarkMutation.mutate({
+        answerId,
+        type: "add",
       });
     }
   };
@@ -116,17 +167,25 @@ export const AnswerCardActionBar = ({
       >
         <FaComment />
       </Button>
-      {count.isBookmarked ? (
-        <Button size="sm" variant="ghost" className="rounded-full text-xs">
-          <FaBookmark />
-          <span>Hapus dari simpan</span>
-        </Button>
-      ) : (
-        <Button size="sm" variant="ghost" className="rounded-full text-xs">
-          <FaBookmark />
-          <span>Simpan</span>
-        </Button>
-      )}
+      <Button
+        onClick={handleBookmarkClick}
+        disabled={bookmarkMutation.isPending}
+        size="sm"
+        variant="ghost"
+        className="rounded-full text-xs"
+      >
+        {count.isBookmarked ? (
+          <>
+            <FaBookmark />
+            Hapus dari daftar simpan
+          </>
+        ) : (
+          <>
+            <FaRegBookmark />
+            Simpan
+          </>
+        )}
+      </Button>
     </div>
   );
 };

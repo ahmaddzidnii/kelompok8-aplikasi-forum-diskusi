@@ -16,4 +16,7 @@ export const config = {
   answers: {
     defaultLimit: 2,
   },
+  bookmarks: {
+    defaultLimit: 1,
+  },
 };

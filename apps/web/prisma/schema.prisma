@@ -129,7 +129,7 @@ model Answers {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   questionId String @map("question_id")
-  qusetion Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  question Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
 
   userId String @map("user_id")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -143,13 +143,14 @@ model Answers {
 }
 
 model SavedAnswer {
+  bookmarkId String @id @default(ulid()) @map("bookmark_id")
   userId String @map("user_id")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   answerId String @map("answer_id")
   answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
 
-  @@id([userId, answerId])
+  @@unique([userId, answerId])
   @@map("saved_answers")
   
 }
