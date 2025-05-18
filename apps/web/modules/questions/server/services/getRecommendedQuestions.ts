@@ -36,7 +36,6 @@ export async function getRecommendedQuestions({
     // 1. Mendapatkan pertanyaan yang sudah diinteraksi oleh user
 
     const interacted = await prisma.answers.findMany({
-
       where: {
         OR: [
           { savedAnswers: { some: { userId } } },
@@ -46,7 +45,7 @@ export async function getRecommendedQuestions({
       },
       select: {
         questionId: true,
-        qusetion: {
+        question: {
           // Menyesuaikan dengan model yang ada (typo di schema)
           select: {
             questionCategory: {
@@ -64,7 +63,7 @@ export async function getRecommendedQuestions({
     // 2. Mendapatkan preferensi kategori pengguna
     const categoryCounts: Record<string, number> = {};
     interacted.forEach((interaction) => {
-      interaction.qusetion?.questionCategory.forEach((qc) => {
+      interaction.question?.questionCategory.forEach((qc) => {
         if (!qc.categoryId) return;
         categoryCounts[qc.categoryId] =
           (categoryCounts[qc.categoryId] || 0) + 1;

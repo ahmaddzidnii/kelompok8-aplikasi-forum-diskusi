@@ -6,14 +6,22 @@ interface QuestionDetailPageProps {
   params: {
     threadsSlug: string;
   };
+  searchParams: {
+    answerSort: "asc" | "desc" | "recommended";
+  };
 }
 
 export const dynamic = "force-dynamic";
 
-const QuestionDetailPage = ({ params }: QuestionDetailPageProps) => {
+const QuestionDetailPage = ({
+  params,
+  searchParams,
+}: QuestionDetailPageProps) => {
+  const answerSort = searchParams.answerSort;
   void trpc.answers.getMany.prefetchInfinite({
     questionSlug: params.threadsSlug,
     limit: config.answers.defaultLimit,
+    sort: answerSort ? answerSort : "recommended",
   });
   return (
     <HydrateClient>

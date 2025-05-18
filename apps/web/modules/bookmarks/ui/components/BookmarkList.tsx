@@ -1,26 +1,53 @@
+"use client";
+import { trpc } from "@/trpc/client";
 import { BookmarkCard } from "./BookmarkCard";
+import { config } from "@/config";
+import { EmptyState } from "@/components/EmptyState";
+import { InfiniteScroll } from "@/components/InfiniteScroll";
 
 export const BookmarkList = () => {
+  const [data, query] = trpc.bookmark.getBookmarks.useSuspenseInfiniteQuery(
+    {
+      limit: config.bookmarks.defaultLimit,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  const bookmarks = data.pages.flatMap((page) => page.items);
+
+  if (bookmarks.length === 0) {
+    return <EmptyState />;
+  }
+
   return (
     <ul>
-      {Array.from({ length: 5 }, (_, i) => (
+      {bookmarks.map((bookmark, i) => (
         <li key={i} className="mb-4">
           <BookmarkCard
-            answerContent="React JS sangat populer karena memiliki ekosistem yang besar dan komunitas yang aktif. Selain itu, React JS juga memiliki performa yang baik dan mudah untuk dipelajari."
+            answerContent={bookmark.answer.content}
+            answerId={bookmark.answer.answerId}
             author={{
-              username: "ahmaddzidnii",
-              name: "Jawed Karim",
-              avatar: "/avatar.png",
-              bio: "Founder at youtube .inc",
+              username: bookmark.answer.user.username || "ahmaddzidnii",
+              name: bookmark.answer.user.name || "Ahmad Dzidnii",
+              avatar: bookmark.answer.user.image || "",
+              bio: bookmark.answer.user.organization || "PT. XYZ",
             }}
-            createdAt="2023-10-01T12:00:00Z"
+            createdAt={bookmark.answer.createdAt.toString()}
             question={{
-              questonSlug: "/threads/mengapa-react-js-sangat-popular-637353",
-              content: "Mengapa React JS sangat populer?",
+              content: bookmark.answer.question.content,
+              questonSlug: bookmark.answer.question.slug,
             }}
           />
         </li>
       ))}
+      <InfiniteScroll
+        hasNextPage={query.hasNextPage}
+        fetchNextPage={query.fetchNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        isManual
+      />
     </ul>
   );
 };
