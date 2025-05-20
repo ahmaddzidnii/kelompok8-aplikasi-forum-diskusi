@@ -135,7 +135,7 @@ export const bookmarkRouter = createTRPCRouter({
         answer: {
           ...bookmark.answer,
           bookmarkId: bookmark.bookmarkId,
-          isBookmarked: true,
+          isBookmarked: userId ? true : false,
         },
       }));
 

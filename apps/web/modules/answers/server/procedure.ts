@@ -205,7 +205,7 @@ export const answersRouter = createTRPCRouter({
             answer;
           return {
             ...answerWithoutBookmarks,
-            isBookmarked: savedAnswers.length > 0,
+            isBookmarked: session ? savedAnswers.length > 0 : false,
             isAlreadyUpvoted: upvotesAnswer.some(
               (upvote) => upvote.userId === session?.user.id,
             ),

@@ -19,4 +19,7 @@ export const config = {
   bookmarks: {
     defaultLimit: 1,
   },
+  comments: {
+    defaultLimit: 10,
+  },
 };

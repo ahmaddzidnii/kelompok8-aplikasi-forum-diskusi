@@ -7,6 +7,7 @@ import { answersRouter } from "@/modules/answers/server/procedure";
 import { createTRPCRouter } from "../init";
 import { votesRouter } from "@/modules/votes/server/procedure";
 import { bookmarkRouter } from "@/modules/bookmarks/server/procedures";
+import { commentsRoute } from "@/modules/comments/server/procedure";
 
 export const appRouter = createTRPCRouter({
   settings: settingsRouter,
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   answers: answersRouter,
   votes: votesRouter,
   bookmark: bookmarkRouter,
+  comments: commentsRoute,
 });
 
 // export type definition of API

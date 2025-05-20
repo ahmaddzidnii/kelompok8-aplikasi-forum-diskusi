@@ -175,8 +175,8 @@ model Comment {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   answerId String @map("answer_id")
   answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
-  parentId String?  @map("parent_id")
-  parentComment Comment? @relation("ParentComment", fields: [parentId], references: [commentId], onDelete: Cascade)
+  parentCommentId String?  @map("parent_comment_id")
+  parentComment Comment? @relation("ParentComment", fields: [parentCommentId], references: [commentId], onDelete: Cascade)
   childComments Comment[] @relation("ParentComment")
   content String @db.Text
   createdAt DateTime @default(now()) @map("created_at")

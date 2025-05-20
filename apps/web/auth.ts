@@ -7,6 +7,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { generateFromEmail } from "unique-username-generator";
 
 import { prisma } from "@/lib/prisma";
+import { uploadToCustomS3 } from "./lib/image-processing";
 
 declare module "next-auth" {
   /**
@@ -85,11 +86,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   events: {
     async signIn(message) {
       if (message.isNewUser) {
+        const imageUrl = message.user.image;
+
+        const image = await uploadToCustomS3(
+          imageUrl!,
+          `profile/${message.user.id}.jpg`,
+        );
+
         await prisma.user.update({
           where: { id: message.user.id },
           data: {
             username: generateFromEmail(message.user.email!, 3),
             organization: "Komunitas Forumdiskusi.",
+            image,
           },
         });
       }

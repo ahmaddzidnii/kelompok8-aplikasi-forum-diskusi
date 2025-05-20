@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
+    "@aws-sdk/client-s3": "^3.812.0",
     "@hookform/resolvers": "^4.1.3",
     "@prisma/client": "^6.4.1",
     "@radix-ui/react-accordion": "^1.2.3",
@@ -86,6 +87,7 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.76.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
