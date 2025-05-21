@@ -1,12 +1,14 @@
 "use client";
 
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react";
 import { FaBookmark, FaComment, FaRegBookmark } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { useComment } from "@/modules/comments/hooks/UseComment";
 import { trpc } from "@/trpc/client";
 import { config } from "@/config";
+import { Loader } from "@/components/Loader";
 
 interface AnswerCardActionBarProps {
   count: {
@@ -27,7 +29,8 @@ export const AnswerCardActionBar = ({
   answerSort,
   questionSlug,
 }: AnswerCardActionBarProps) => {
-  const { setIsOpen, isOpen } = useComment();
+  const { open, close, isOpen } = useComment();
+  const { status } = useSession();
   const trpcUtils = trpc.useUtils();
   const upVoteMutation = trpc.votes.upVote.useMutation({
     onSuccess: ({ answerId }) => {
@@ -117,7 +120,11 @@ export const AnswerCardActionBar = ({
   });
 
   const handleCommentClick = () => {
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      close();
+    } else {
+      open(answerId);
+    }
   };
 
   const handleUpVoteClick = () => {
@@ -155,9 +162,13 @@ export const AnswerCardActionBar = ({
         onClick={handleUpVoteClick}
         size="sm"
         disabled={upVoteMutation.isPending}
-        className="rounded-full"
+        className="min-w-32 rounded-full"
       >
-        Dukung naik • {count.upVote}
+        {upVoteMutation.isPending ? (
+          <Loader />
+        ) : (
+          `Dukung naik  • ${count.upVote}`
+        )}
       </Button>
       <Button
         onClick={handleCommentClick}
@@ -167,25 +178,27 @@ export const AnswerCardActionBar = ({
       >
         <FaComment />
       </Button>
-      <Button
-        onClick={handleBookmarkClick}
-        disabled={bookmarkMutation.isPending}
-        size="sm"
-        variant="ghost"
-        className="rounded-full text-xs"
-      >
-        {count.isBookmarked ? (
-          <>
-            <FaBookmark />
-            Hapus dari daftar simpan
-          </>
-        ) : (
-          <>
-            <FaRegBookmark />
-            Simpan
-          </>
-        )}
-      </Button>
+      {status === "authenticated" && (
+        <Button
+          onClick={handleBookmarkClick}
+          disabled={bookmarkMutation.isPending}
+          size="sm"
+          variant="ghost"
+          className="rounded-full text-xs"
+        >
+          {count.isBookmarked ? (
+            <>
+              <FaBookmark />
+              Singkirkan
+            </>
+          ) : (
+            <>
+              <FaRegBookmark />
+              Simpan
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };

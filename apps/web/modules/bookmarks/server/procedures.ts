@@ -17,7 +17,7 @@ export const bookmarkRouter = createTRPCRouter({
       const userId = ctx.session?.user.id!;
 
       // Cek apakah jawaban ada
-      const answer = await prisma.answers.findUnique({
+      const answer = await prisma.answer.findUnique({
         where: {
           answerId,
         },
@@ -135,7 +135,7 @@ export const bookmarkRouter = createTRPCRouter({
         answer: {
           ...bookmark.answer,
           bookmarkId: bookmark.bookmarkId,
-          isBookmarked: true,
+          isBookmarked: userId ? true : false,
         },
       }));
 

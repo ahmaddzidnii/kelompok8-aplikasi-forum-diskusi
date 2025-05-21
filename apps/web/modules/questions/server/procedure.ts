@@ -47,7 +47,7 @@ export const questionsRouter = createTRPCRouter({
       const { cursor, limit } = input;
       const { session } = ctx;
       try {
-        const questions = await prisma.questions.findMany({
+        const questions = await prisma.question.findMany({
           where: {
             userId: session?.user.id,
           },
@@ -104,7 +104,7 @@ export const questionsRouter = createTRPCRouter({
       const { slug } = input;
       const { session } = ctx;
 
-      const question = await prisma.questions.findUnique({
+      const question = await prisma.question.findUnique({
         where: {
           slug,
         },
@@ -121,7 +121,7 @@ export const questionsRouter = createTRPCRouter({
         },
       });
 
-      const isAnswered = await prisma.answers.findFirst({
+      const isAnswered = await prisma.answer.findFirst({
         where: {
           questionId: question?.questionId,
           userId: session?.user.id,
@@ -156,9 +156,9 @@ export const questionsRouter = createTRPCRouter({
       const { categoryId, cursor } = input;
       // const { session } = ctx;
 
-      const questions = await prisma.questions.findMany({
+      const questions = await prisma.question.findMany({
         where: {
-          questionCategory: {
+          questionCategories: {
             some: {
               categoryId: categoryId,
             },

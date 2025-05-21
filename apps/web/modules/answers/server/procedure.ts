@@ -20,7 +20,7 @@ export const answersRouter = createTRPCRouter({
         const session = ctx.session;
 
         // 1. Cek keberadaan pertanyaan
-        const question = await prisma.questions.findUnique({
+        const question = await prisma.question.findUnique({
           where: { questionId },
           select: { userId: true, slug: true },
         });
@@ -40,7 +40,7 @@ export const answersRouter = createTRPCRouter({
         }
 
         // 3. Buat jawaban
-        const answer = await prisma.answers.create({
+        const answer = await prisma.answer.create({
           data: {
             userId: session?.user.id!,
             questionId,
@@ -112,7 +112,7 @@ export const answersRouter = createTRPCRouter({
           }
         : null;
 
-      const q = await prisma.questions.findUnique({
+      const q = await prisma.question.findUnique({
         where: {
           slug: questionSlug,
         },
@@ -138,7 +138,7 @@ export const answersRouter = createTRPCRouter({
       if (sort === "recommended") {
         // Untuk sort recommended, kita gunakan strategi yang berbeda
         // Ambil semua jawaban, urutkan server-side, lalu paginate
-        const allAnswers = await prisma.answers.findMany({
+        const allAnswers = await prisma.answer.findMany({
           where: {
             questionId: q.questionId,
           },
@@ -205,7 +205,7 @@ export const answersRouter = createTRPCRouter({
             answer;
           return {
             ...answerWithoutBookmarks,
-            isBookmarked: savedAnswers.length > 0,
+            isBookmarked: session ? savedAnswers.length > 0 : false,
             isAlreadyUpvoted: upvotesAnswer.some(
               (upvote) => upvote.userId === session?.user.id,
             ),
@@ -260,7 +260,7 @@ export const answersRouter = createTRPCRouter({
           }
         }
 
-        const answers = await prisma.answers.findMany({
+        const answers = await prisma.answer.findMany({
           where,
           take: limit + 1,
           orderBy: {

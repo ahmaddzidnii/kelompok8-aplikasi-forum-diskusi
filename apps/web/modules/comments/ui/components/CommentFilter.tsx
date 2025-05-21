@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
 import {
@@ -9,12 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useComment } from "../../hooks/UseComment";
 
 export const CommentFilter = () => {
-  const [sort, setSort] = useState<"asc" | "desc">("asc");
+  const { sort, setSort } = useComment();
 
   const handleSortChange = (value: "asc" | "desc") => {
-    setSort(value);
+    setSort?.(value);
   };
   return (
     <div className="flex w-full items-center justify-between">

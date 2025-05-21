@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,41 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  SUPER_ADMIN
+}
+
 model Account {
-  id                 String  @id @default(ulid())
-  userId             String  @map("user_id")
-  type               String
-  provider           String
-  providerAccountId  String  @map("provider_account_id")
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+  id                String  @id @default(ulid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @db.Text @map("refresh_token")
+  accessToken       String? @db.Text @map("access_token")
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @db.Text @map("id_token")
+  sessionState      String? @map("session_state")
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
   @@map("accounts")
 }
- 
+
 model Session {
   id           String   @id @default(ulid())
   sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id")
   expires      DateTime
+
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@map("sessions")
 }
 
-enum Role {
-  USER
-  SUPER_ADMIN
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
- 
+
 model User {
   id            String    @id @default(ulid())
   name          String?
@@ -64,123 +68,111 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
-  questions     Questions[]
-  answers       Answers[]
+  questions     Question[]
+  answers       Answer[]
   savedAnswers  SavedAnswer[]
-  upvotesAnswer UpvotesAnswer[]
+  upvotesAnswer UpvoteAnswer[]
   comments      Comment[]
- 
+
   @@map("users")
 }
- 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
- 
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
 
 model Category {
-  categoryId        String   @id @default(ulid()) @map("category_id")
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  categoryId   String   @id @default(ulid()) @map("category_id")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  questionCategory QuestionCategory[]
+  questionCategories QuestionCategory[]
 
   @@map("categories")
 }
 
-model Questions {
-  questionId String @id @default(ulid()) @map("question_id")
-  slug     String @unique
-  content String @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model Question {
+  questionId   String   @id @default(ulid()) @map("question_id")
+  slug         String   @unique
+  content      String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  userId       String   @map("user_id")
 
-  userId String @map("user_id")
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  questionCategory QuestionCategory[]
-  answer Answers[]
-
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionCategories QuestionCategory[]
+  answers      Answer[]
 
   @@map("questions")
 }
 
-model QuestionCategory{
-  questionId String @map("question_id")
-  categoryId String @map("category_id")
+model QuestionCategory {
+  questionId   String   @map("question_id")
+  categoryId   String   @map("category_id")
 
-  question Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
-  category Category @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
+  question     Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  category     Category @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
 
   @@id([questionId, categoryId])
   @@map("question_category")
 }
 
-model Answers {
-  answerId String @id @default(ulid()) @map("answer_id")
-  content String @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model Answer {
+  answerId     String   @id @default(ulid()) @map("answer_id")
+  content      String   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  questionId   String   @map("question_id")
+  userId       String   @map("user_id")
 
-  questionId String @map("question_id")
-  question Questions @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
-
-  userId String @map("user_id")
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  question     Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   savedAnswers SavedAnswer[]
-  upvotesAnswer UpvotesAnswer[]
-  comments Comment[]
+  upvotesAnswer UpvoteAnswer[]
+  comments     Comment[]
 
   @@map("answers")
   @@unique([questionId, userId])
 }
 
 model SavedAnswer {
-  bookmarkId String @id @default(ulid()) @map("bookmark_id")
-  userId String @map("user_id")
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookmarkId   String   @id @default(ulid()) @map("bookmark_id")
+  userId       String   @map("user_id")
+  answerId     String   @map("answer_id")
 
-  answerId String @map("answer_id")
-  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answer       Answer   @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
 
   @@unique([userId, answerId])
   @@map("saved_answers")
-  
 }
 
-model UpvotesAnswer {
-  upvoteId String @default(ulid()) @map("upvote_id")
-  userId String @map("user_id")
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UpvoteAnswer {
+  upvoteId     String   @id @default(ulid()) @map("upvote_id")
+  userId       String   @map("user_id")
+  answerId     String   @map("answer_id")
+  createdAt    DateTime @default(now()) @map("created_at")
 
-  answerId String @map("answer_id")
-  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answer       Answer   @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@id([userId, answerId,upvoteId])
+  @@unique([userId, answerId, upvoteId])
   @@map("upvotes_answer")
 }
 
 model Comment {
-  commentId String @id @default(ulid()) @map("comment_id")
-  userId String @map("user_id")
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answerId String @map("answer_id")
-  answer Answers @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
-  parentId String?  @map("parent_id")
-  parentComment Comment? @relation("ParentComment", fields: [parentId], references: [commentId], onDelete: Cascade)
-  childComments Comment[] @relation("ParentComment")
-  content String @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  commentId         String    @id @default(ulid()) @map("comment_id")
+  userId            String    @map("user_id")
+  answerId          String    @map("answer_id")
+  parentCommentId   String?   @map("parent_comment_id")
+  replyToCommentId  String?   @map("reply_to_comment_id")
+  content           String    @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answer            Answer    @relation(fields: [answerId], references: [answerId], onDelete: Cascade)
+  parentComment     Comment?  @relation("ParentComment", fields: [parentCommentId], references: [commentId], onDelete: Cascade)
+  replyToComment    Comment?  @relation("ReplyToComment", fields: [replyToCommentId], references: [commentId], onDelete: Cascade)
+  repliedBy         Comment[] @relation("ReplyToComment")
+  childComments     Comment[] @relation("ParentComment")
 
   @@map("comments")
 }

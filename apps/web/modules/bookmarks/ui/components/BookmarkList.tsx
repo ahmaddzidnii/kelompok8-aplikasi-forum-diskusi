@@ -1,11 +1,26 @@
 "use client";
-import { trpc } from "@/trpc/client";
-import { BookmarkCard } from "./BookmarkCard";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+
 import { config } from "@/config";
+import { trpc } from "@/trpc/client";
+import { Loader } from "@/components/Loader";
+import { BookmarkCard } from "./BookmarkCard";
 import { EmptyState } from "@/components/EmptyState";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
+import { InternalServerError } from "@/components/InternalServerErrorFallback";
 
 export const BookmarkList = () => {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ErrorBoundary fallback={<InternalServerError />}>
+        <BookmarkListSuspense />
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const BookmarkListSuspense = () => {
   const [data, query] = trpc.bookmark.getBookmarks.useSuspenseInfiniteQuery(
     {
       limit: config.bookmarks.defaultLimit,

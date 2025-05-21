@@ -19,7 +19,7 @@ export const votesRouter = createTRPCRouter({
       switch (type) {
         case "upVote":
           // Check if the user has already voted
-          const existingVote = await prisma.upvotesAnswer.findFirst({
+          const existingVote = await prisma.upvoteAnswer.findFirst({
             where: {
               userId: userId,
               answerId: answerId,
@@ -37,7 +37,7 @@ export const votesRouter = createTRPCRouter({
           }
 
           // Create a new vote
-          const vote = await prisma.upvotesAnswer.create({
+          const vote = await prisma.upvoteAnswer.create({
             data: {
               userId: userId as string,
               answerId: answerId,
@@ -47,7 +47,7 @@ export const votesRouter = createTRPCRouter({
             },
           });
 
-          const answerCount = await prisma.answers.findUnique({
+          const answerCount = await prisma.answer.findUnique({
             where: {
               answerId: vote.answerId,
             },
@@ -70,7 +70,7 @@ export const votesRouter = createTRPCRouter({
 
         case "cancelVote":
           // Check if the user has already voted
-          const existingVoteToCancel = await prisma.upvotesAnswer.findFirst({
+          const existingVoteToCancel = await prisma.upvoteAnswer.findFirst({
             where: {
               userId: userId,
               answerId: answerId,
@@ -89,7 +89,7 @@ export const votesRouter = createTRPCRouter({
           }
 
           // Delete the vote
-          const deletedVote = await prisma.upvotesAnswer.delete({
+          const deletedVote = await prisma.upvoteAnswer.delete({
             where: {
               userId_answerId_upvoteId: {
                 userId: userId as string,
@@ -102,7 +102,7 @@ export const votesRouter = createTRPCRouter({
             },
           });
 
-          const answer = await prisma.answers.findUnique({
+          const answer = await prisma.answer.findUnique({
             where: {
               answerId: deletedVote.answerId,
             },
