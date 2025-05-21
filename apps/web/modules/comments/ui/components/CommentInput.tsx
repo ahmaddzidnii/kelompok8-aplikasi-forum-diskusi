@@ -20,9 +20,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { config } from "@/config";
 
 const formSchema = z.object({
-  comment: z.string().max(400),
+  comment: z.string().max(config.comments.maxLength),
 });
 
 export const CommentInput = () => {
@@ -98,6 +99,7 @@ export const CommentInput = () => {
               />
               <LoadingButton
                 loading={topLevelCommentMutation.isPending}
+                disabled={!form.formState.isValid}
                 className="mt-2"
                 variant="secondary"
                 size="sm"

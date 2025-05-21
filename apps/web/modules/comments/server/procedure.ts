@@ -6,9 +6,9 @@ import {
   createTRPCRouter,
   dynamicProcedure,
   protectedProcedure,
-  //   protectedProcedure,
 } from "@/trpc/init";
 import { config } from "@/config";
+import logger from "@/lib/logger";
 
 export const commentsRoute = createTRPCRouter({
   getTopLevelCommentsByAnswerId: dynamicProcedure
@@ -112,15 +112,27 @@ export const commentsRoute = createTRPCRouter({
     .input(
       z.object({
         parentCommentId: z.string(),
+        cursor: z
+          .object({
+            commentId: z.string().nullish(),
+          })
+          .optional(),
       }),
     )
     .query(async ({ input }) => {
-      const { parentCommentId } = input;
+      const { parentCommentId, cursor } = input;
+      const LIMIT = config.replies.defaultLimit;
 
       const replies = await prisma.comment.findMany({
         where: {
           parentCommentId,
+          commentId: cursor?.commentId
+            ? {
+                gt: cursor.commentId,
+              }
+            : undefined,
         },
+        take: LIMIT + 1,
         include: {
           answer: {
             select: {
@@ -139,7 +151,7 @@ export const commentsRoute = createTRPCRouter({
               image: true,
             },
           },
-          parentComment: {
+          replyToComment: {
             include: {
               user: {
                 select: {
@@ -152,7 +164,16 @@ export const commentsRoute = createTRPCRouter({
         },
       });
 
-      const formattedReplies = replies.map((reply) => ({
+      const hasMore = replies.length > LIMIT;
+      const items = hasMore ? replies.slice(0, -1) : replies;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            commentId: lastItem.commentId,
+          }
+        : null;
+
+      const formattedReplies = items.map((reply) => ({
         commentId: reply.commentId,
         user: {
           id: reply.user.id,
@@ -164,20 +185,23 @@ export const commentsRoute = createTRPCRouter({
         createdAt: reply.createdAt,
         updatedAt: reply.updatedAt,
         replyingTo: {
-          username: reply.parentComment!.user.username,
+          username: reply.replyToComment?.user.username,
         },
         isEdited: reply.createdAt !== reply.updatedAt,
         isOwner: reply.user.id === reply.answer.user.id,
       }));
 
-      return formattedReplies;
+      return {
+        items: formattedReplies,
+        nextCursor,
+      };
     }),
 
   createTopLevelComment: protectedProcedure
     .input(
       z.object({
         answerId: z.string(),
-        content: z.string().min(1).max(500),
+        content: z.string().min(1).max(config.comments.maxLength),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -239,6 +263,109 @@ export const commentsRoute = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create comment",
+        });
+      }
+    }),
+
+  createReply: protectedProcedure
+    .input(
+      z.object({
+        answerId: z.string(),
+        parentCommentId: z.string(),
+        content: z.string().min(1).max(config.replies.maxLength),
+        replyToCommentId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { parentCommentId, content, answerId, replyToCommentId } = input;
+      const userId = ctx.session?.user.id as string;
+
+      logger.debug(
+        `Attempting to create reply: parentCommentId=${parentCommentId}, answerId=${answerId}, userId=${userId}, replyToCommentId=${replyToCommentId}`,
+      );
+
+      try {
+        // First verify that the parent comment exists
+        const parentComment = await prisma.comment.findUnique({
+          where: { commentId: parentCommentId },
+        });
+
+        if (!parentComment) {
+          logger.warn(
+            `Parent comment not found: parentCommentId=${parentCommentId}`,
+          );
+          throw new Error("Parent comment not found");
+        }
+
+        const reply = await prisma.comment.create({
+          data: {
+            parentCommentId,
+            content,
+            userId,
+            answerId,
+            replyToCommentId,
+          },
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+            replyToComment: {
+              select: {
+                user: {
+                  select: {
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        logger.info(
+          `Reply created successfully: replyId=${reply.commentId}, parentCommentId=${parentCommentId}, userId=${userId}`,
+        );
+
+        const formatedReply = {
+          commentId: reply.commentId,
+          user: {
+            id: reply.user.id,
+            name: reply.user.name,
+            username: reply.user.username,
+            image: reply.user.image,
+          },
+          content: reply.content,
+          createdAt: reply.createdAt,
+          updatedAt: reply.updatedAt,
+          isEdited: reply.createdAt !== reply.updatedAt,
+          isOwner: reply.user.id === reply.answer.user.id,
+          replyingTo: {
+            username: reply.replyToComment?.user.username,
+          },
+          replyToCommentId: reply.replyToCommentId,
+        };
+
+        return formatedReply;
+      } catch (error) {
+        logger.error(
+          `Error creating reply: ${error instanceof Error ? error.message : String(error)} | parentCommentId=${parentCommentId}, answerId=${answerId}, userId=${userId}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create reply",
         });
       }
     }),

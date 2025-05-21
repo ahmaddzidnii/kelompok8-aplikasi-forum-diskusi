@@ -27,7 +27,7 @@ export const generateQuestion = async (
     }
 
     // buat question
-    const question = await tx.questions.create({
+    const question = await tx.question.create({
       data: {
         slug: generateSlug(questionContent.split(" ").slice(0, 10).join(" ")),
         content: questionContent,

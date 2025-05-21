@@ -1,77 +1,122 @@
+import React, { createContext, useState, useMemo, useCallback } from "react";
 import { trpc } from "@/trpc/client";
-import { createContext, useState } from "react";
 
-type ReplyContextType = {
+interface ReplyUser {
+  id: string;
+  name: string | null;
+  username: string | null;
+  image: string | null;
+}
+
+interface ReplyItem {
+  commentId: string;
+  user: ReplyUser;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  replyingTo: {
+    username: string | null | undefined;
+  };
+  isEdited: boolean;
+  isOwner: boolean;
+}
+
+interface ReplyQuery {
+  hasNextPage: boolean;
+  fetchNextPage: () => void;
+  isFetchingNextPage: boolean;
+}
+
+interface ReplyContextType {
   isOpen: boolean;
-  parentCommentId: string | undefined;
-  setParentCommentId: (commentId: string) => void;
+  parentCommentId?: string;
+  setParentCommentId: (commentId?: string) => void;
   open: (commentId: string) => void;
   close: () => void;
   isLoading?: boolean;
-  replies: {
-    commentId: string;
-    user: {
-      id: string;
-      name: string | null;
-      username: string | null;
-      image: string | null;
-    };
-    content: string;
-    createdAt: Date;
-    updatedAt: Date;
-    replyingTo: {
-      username: string | null;
-    };
-    isEdited: boolean;
-    isOwner: boolean;
-  }[];
-};
+  replies: ReplyItem[];
+  query: ReplyQuery;
+}
 
-export const ReplyContext = createContext<ReplyContextType>({
+const defaultContext: ReplyContextType = {
   isOpen: false,
   parentCommentId: undefined,
   setParentCommentId: () => {},
   open: () => {},
   close: () => {},
   replies: [],
-});
+  query: {
+    hasNextPage: false,
+    fetchNextPage: () => {},
+    isFetchingNextPage: false,
+  },
+};
+
+export const ReplyContext = createContext<ReplyContextType>(defaultContext);
 
 export const ReplyProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [parentCommentId, setParentCommentId] = useState<string | undefined>(
-    undefined,
-  );
+  const [parentCommentId, setParentCommentId] = useState<string | undefined>();
 
-  const open = (commentId: string) => {
+  const open = useCallback((commentId: string) => {
     setParentCommentId(commentId);
     setIsOpen(true);
-  };
+  }, []);
 
-  const close = () => {
+  const close = useCallback(() => {
     setIsOpen(false);
     setParentCommentId(undefined);
-  };
+  }, []);
 
-  const { data: replies = [], isLoading } =
-    trpc.comments.getRepliesByParentCommentId.useQuery(
-      { parentCommentId: parentCommentId as string },
-      {
-        enabled: !!parentCommentId && isOpen,
+  const {
+    data,
+    isLoading,
+    hasNextPage = false,
+    isFetchingNextPage = false,
+    fetchNextPage = () => {},
+  } = trpc.comments.getRepliesByParentCommentId.useInfiniteQuery(
+    { parentCommentId: parentCommentId ?? "" },
+    {
+      enabled: Boolean(parentCommentId && isOpen),
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  const replies = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      isOpen,
+      parentCommentId,
+      setParentCommentId,
+      open,
+      close,
+      replies,
+      query: {
+        hasNextPage,
+        fetchNextPage,
+        isFetchingNextPage,
       },
-    );
+      isLoading,
+    }),
+    [
+      isOpen,
+      parentCommentId,
+      replies,
+      hasNextPage,
+      fetchNextPage,
+      isFetchingNextPage,
+      isLoading,
+      open,
+      close,
+    ],
+  );
 
   return (
-    <ReplyContext.Provider
-      value={{
-        isOpen,
-        parentCommentId,
-        setParentCommentId,
-        open,
-        close,
-        replies,
-        isLoading,
-      }}
-    >
+    <ReplyContext.Provider value={contextValue}>
       {children}
     </ReplyContext.Provider>
   );

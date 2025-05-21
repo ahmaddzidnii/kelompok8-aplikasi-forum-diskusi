@@ -14,12 +14,17 @@ export const config = {
     defaultLimit: 10,
   },
   answers: {
-    defaultLimit: 2,
+    defaultLimit: 10,
   },
   bookmarks: {
-    defaultLimit: 1,
+    defaultLimit: 10,
   },
   comments: {
     defaultLimit: 10,
+    maxLength: 500,
+  },
+  replies: {
+    defaultLimit: 10,
+    maxLength: 500,
   },
 };

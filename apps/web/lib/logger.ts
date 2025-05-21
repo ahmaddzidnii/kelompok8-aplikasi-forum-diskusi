@@ -30,11 +30,6 @@ const logger = winston.createLogger({
         myFormat,
       ),
     }),
-    // new transports.File({
-    //   filename: ".logs/error.log",
-    //   level: "error",
-    //   format: combine(timestamp({ format: "YYYY-MM-DD HH:mm:ss" }), json()),
-    // }),
   ],
 });
 

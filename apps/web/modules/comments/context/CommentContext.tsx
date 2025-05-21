@@ -1,4 +1,10 @@
-import { createContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from "react";
 import { trpc } from "@/trpc/client";
 
 type SortType = "asc" | "desc";
@@ -64,21 +70,26 @@ export const CommentContext = createContext<CommentContextType>(defaultContext);
 export const CommentProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [answerId, setAnswerId] = useState<string | undefined>(undefined);
-  const [sort, setSortState] = useState<SortType>("desc");
+  const [sort, setSort] = useState<SortType>("desc");
 
-  const open = (id: string) => {
+  // Gunakan useCallback agar referensi stabil
+  const open = useCallback((id: string) => {
     setAnswerId(id);
     setIsOpen(true);
-  };
+  }, []);
 
-  const close = () => {
+  const close = useCallback(() => {
     setIsOpen(false);
     setAnswerId(undefined);
-  };
+  }, []);
 
-  const toggleSort = (sort: SortType) => {
-    setSortState(sort);
-  };
+  const setSortCallback = useCallback((sort: SortType) => {
+    setSort(sort);
+  }, []);
+
+  const setAnswerIdCallback = useCallback((id: string) => {
+    setAnswerId(id);
+  }, []);
 
   const {
     data,
@@ -95,28 +106,49 @@ export const CommentProvider = ({ children }: { children: ReactNode }) => {
     },
   );
 
-  const comments: Comment[] = data?.pages.flatMap((page) => page.items) || [];
+  const comments: Comment[] = useMemo(
+    () => data?.pages.flatMap((page) => page.items) || [],
+    [data],
+  );
+
+  // Memoize context value
+  const contextValue = useMemo(
+    () => ({
+      isOpen,
+      answerId,
+      sort,
+      setSort: setSortCallback,
+      setAnswerId: setAnswerIdCallback,
+      open,
+      close,
+      isLoading,
+      isError,
+      comments,
+      query: {
+        hasNextPage,
+        fetchNextPage,
+        isFetchingNextPage,
+      },
+    }),
+    [
+      isOpen,
+      answerId,
+      sort,
+      setSortCallback,
+      setAnswerIdCallback,
+      open,
+      close,
+      isLoading,
+      isError,
+      comments,
+      hasNextPage,
+      fetchNextPage,
+      isFetchingNextPage,
+    ],
+  );
 
   return (
-    <CommentContext.Provider
-      value={{
-        isOpen,
-        answerId,
-        sort,
-        setSort: toggleSort,
-        setAnswerId,
-        open,
-        close,
-        isLoading,
-        isError,
-        comments,
-        query: {
-          hasNextPage,
-          fetchNextPage,
-          isFetchingNextPage,
-        },
-      }}
-    >
+    <CommentContext.Provider value={contextValue}>
       {children}
     </CommentContext.Provider>
   );
