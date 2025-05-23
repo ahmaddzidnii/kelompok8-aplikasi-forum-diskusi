@@ -5,6 +5,7 @@ import {
   createTRPCRouter,
   dynamicProcedure,
   protectedProcedure,
+  publicProcedure,
 } from "@/trpc/init";
 
 import { askFormSchema } from "@/modules/questions/schema";
@@ -12,19 +13,22 @@ import { generateQuestion } from "./services/generateQuestion";
 import { prisma } from "@/lib/prisma";
 
 import { config } from "@/config";
+import logger from "@/lib/logger";
 
 export const questionsRouter = createTRPCRouter({
   createQuestion: protectedProcedure
     .input(askFormSchema)
     .mutation(async ({ input, ctx }) => {
+      logger.info("Attempting to create a new question.");
       try {
         const questionSlug = await generateQuestion(input, ctx.session);
+        logger.info(`Question created successfully with slug: ${questionSlug}`);
         return {
           message: "Ask created successfully",
           slug: questionSlug,
         };
       } catch (error) {
-        console.error("Error creating ask:", error);
+        logger.error(`Error creating ask: ${(error as Error).message}`);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create ask",
@@ -46,7 +50,11 @@ export const questionsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { cursor, limit } = input;
       const { session } = ctx;
+      logger.info(`Fetching questions for user: ${session?.user.id}`);
       try {
+        logger.debug(
+          `Query params - cursor: ${JSON.stringify(cursor)}, limit: ${limit}`,
+        );
         const questions = await prisma.question.findMany({
           where: {
             userId: session?.user.id,
@@ -69,11 +77,9 @@ export const questionsRouter = createTRPCRouter({
           cursor: cursor ? { questionId: cursor.questionId } : undefined,
         });
 
+        logger.debug(`Fetched ${questions.length} questions from database.`);
         const hasMore = questions.length > limit;
-        // Remove the last item if there are more items
         const items = hasMore ? questions.slice(0, -1) : questions;
-
-        // Set the next cursor to the last item if there are more items
         const lastItem = items[items.length - 1];
 
         const nextCursor = hasMore
@@ -83,14 +89,18 @@ export const questionsRouter = createTRPCRouter({
             }
           : null;
 
+        logger.info(
+          `Returning ${items.length} questions. Has more: ${hasMore}`,
+        );
         return {
           items,
           nextCursor,
         };
       } catch (error) {
-        console.error("Error fetching questions:", error);
+        logger.error(`Error fetching questions: ${(error as Error).message}`);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch questions",
         });
       }
     }),
@@ -103,47 +113,60 @@ export const questionsRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const { slug } = input;
       const { session } = ctx;
+      logger.info(`Fetching question with slug: ${slug}`);
 
-      const question = await prisma.question.findUnique({
-        where: {
-          slug,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              image: true,
-              organization: true,
+      try {
+        const question = await prisma.question.findUnique({
+          where: {
+            slug,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+                organization: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      const isAnswered = await prisma.answer.findFirst({
-        where: {
-          questionId: question?.questionId,
-          userId: session?.user.id,
-        },
-        select: {
-          answerId: true, // cukup ambil ID-nya saja
-        },
-      });
+        if (!question) {
+          logger.warn(`Question not found for slug: ${slug}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Question not found",
+          });
+        }
 
-      const hasAnswered = !!isAnswered;
+        const isAnswered = await prisma.answer.findFirst({
+          where: {
+            questionId: question?.questionId,
+            userId: session?.user.id,
+          },
+          select: {
+            answerId: true,
+          },
+        });
 
-      if (!question) {
+        const hasAnswered = !!isAnswered;
+        logger.info(`Question found. Has answered: ${hasAnswered}`);
+
+        return {
+          ...question,
+          hasAnswered,
+        };
+      } catch (error) {
+        logger.error(
+          `Error fetching question with slug ${slug}: ${(error as Error).message}`,
+        );
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Question not found",
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch question",
         });
       }
-
-      return {
-        ...question,
-        hasAnswered,
-      };
     }),
   getRecommended: dynamicProcedure
     .input(
@@ -154,42 +177,84 @@ export const questionsRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const { categoryId, cursor } = input;
-      // const { session } = ctx;
-
-      const questions = await prisma.question.findMany({
-        where: {
-          questionCategories: {
-            some: {
-              categoryId: categoryId,
+      logger.info(
+        `Fetching recommended questions. Category: ${categoryId}, Cursor: ${cursor}`,
+      );
+      try {
+        const questions = await prisma.question.findMany({
+          where: {
+            questionCategories: {
+              some: {
+                categoryId: categoryId,
+              },
             },
           },
-        },
 
-        take: config.questions.defaultLimit + 1,
-        cursor: cursor ? { questionId: cursor } : undefined,
-        orderBy: {
-          updatedAt: "desc",
-        },
+          take: config.questions.defaultLimit + 1,
+          cursor: cursor ? { questionId: cursor } : undefined,
+          orderBy: {
+            updatedAt: "desc",
+          },
 
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              image: true,
-              organization: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+                organization: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      return {
-        items: questions,
-        nextCursor:
-          questions.length > config.questions.defaultLimit
-            ? questions[questions.length - 1].questionId
-            : null,
-      };
+        logger.debug(`Fetched ${questions.length} recommended questions.`);
+        return {
+          items: questions,
+          nextCursor:
+            questions.length > config.questions.defaultLimit
+              ? questions[questions.length - 1].questionId
+              : null,
+        };
+      } catch (error) {
+        logger.error(
+          `Error fetching recommended questions: ${(error as Error).message}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch recommended questions",
+        });
+      }
+    }),
+  getPageTitle: publicProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { slug } = input;
+      logger.info(`Fetching page title for slug: ${slug}`);
+      try {
+        const question = await prisma.question.findUnique({
+          where: {
+            slug,
+          },
+          select: {
+            content: true,
+          },
+        });
+
+        return `${question?.content} - ${config.appName}`;
+      } catch (error) {
+        logger.error(
+          `Error fetching page title for slug ${slug}: ${(error as Error).message}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch page title",
+        });
+      }
     }),
 });
