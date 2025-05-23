@@ -10,6 +10,7 @@ import {
 } from "@/trpc/init";
 
 import { answerSchema } from "../schema";
+import logger from "@/lib/logger";
 
 export const answersRouter = createTRPCRouter({
   createAnswer: protectedProcedure
@@ -19,12 +20,17 @@ export const answersRouter = createTRPCRouter({
         const { questionId, content } = input;
         const session = ctx.session;
 
+        logger.debug(
+          `Attempting to create answer: questionId=${questionId}, userId=${session?.user.id}`,
+        );
+
         // 1. Cek keberadaan pertanyaan
         const question = await prisma.question.findUnique({
           where: { questionId },
           select: { userId: true, slug: true },
         });
         if (!question) {
+          logger.warn(`Question not found: questionId=${questionId}`);
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Pertanyaan tidak ditemukan",
@@ -33,6 +39,9 @@ export const answersRouter = createTRPCRouter({
 
         // 2. Cek user tidak menjawab sendiri
         if (question.userId === session?.user.id) {
+          logger.warn(
+            `User attempted to answer their own question: userId=${session?.user.id}, questionId=${questionId}`,
+          );
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Anda tidak bisa menjawab pertanyaan sendiri",
@@ -48,29 +57,38 @@ export const answersRouter = createTRPCRouter({
           },
         });
 
+        logger.info(
+          `Answer created: answerId=${answer.answerId}, questionId=${questionId}, userId=${session?.user.id}`,
+        );
+
         return {
           answerId: answer.answerId,
           questionSlug: question.slug,
         };
       } catch (error) {
-        // A. Duplicate key — user sudah pernah menjawab
         if (
           error instanceof PrismaClientKnownRequestError &&
-          (error.meta?.target as string[]).includes("userId_questionId")
+          (error.meta?.target as string[])?.includes("userId_questionId")
         ) {
+          logger.warn(
+            `Duplicate answer attempt: userId_questionId constraint violated`,
+          );
           throw new TRPCError({
             code: "CONFLICT",
             message: "Anda sudah menjawab pertanyaan ini sebelumnya",
           });
         }
 
-        // B. TRPCError yang sudah kita lempar di atas biarkan lewat
         if (error instanceof TRPCError) {
+          logger.debug(`TRPCError thrown in createAnswer: ${error.message}`);
           throw error;
         }
 
-        // C. Error tak terduga → INTERNAL_SERVER_ERROR
-        console.error("Unexpected error creating answer:", error);
+        logger.error(
+          `Unexpected error creating answer: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Gagal membuat jawaban, silakan coba lagi nanti",
@@ -84,7 +102,7 @@ export const answersRouter = createTRPCRouter({
         cursor: z
           .object({
             answerId: z.string(),
-            createdAt: z.string().optional(), // String format for date
+            createdAt: z.string().optional(),
             upvoteCount: z.number().optional(),
           })
           .nullish(),
@@ -102,231 +120,241 @@ export const answersRouter = createTRPCRouter({
       const { cursor, limit, questionSlug, sort } = input;
       const session = ctx.session;
 
-      // Mengubah createdAt string ke Date object jika ada
-      const parsedCursor = cursor
-        ? {
-            ...cursor,
-            createdAt: cursor.createdAt
-              ? new Date(cursor.createdAt)
-              : undefined,
-          }
-        : null;
+      logger.debug(
+        `Fetching answers: questionSlug=${questionSlug}, cursor=${JSON.stringify(
+          cursor,
+        )}, limit=${limit}, sort=${sort}`,
+      );
 
-      const q = await prisma.question.findUnique({
-        where: {
-          slug: questionSlug,
-        },
-        select: {
-          questionId: true,
-        },
-      });
+      try {
+        // Mengubah createdAt string ke Date object jika ada
+        const parsedCursor = cursor
+          ? {
+              ...cursor,
+              createdAt: cursor.createdAt
+                ? new Date(cursor.createdAt)
+                : undefined,
+            }
+          : null;
 
-      if (!q) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Pertanyaan tidak ditemukan",
-        });
-      }
-
-      // Define base where clause
-      let where: any = {
-        questionId: q.questionId,
-      };
-
-      // Pendekatan alternatif untuk pagination yang lebih sederhana:
-      // Gunakan skip dan take tanpa kondisi WHERE yang kompleks untuk mode recommended
-      if (sort === "recommended") {
-        // Untuk sort recommended, kita gunakan strategi yang berbeda
-        // Ambil semua jawaban, urutkan server-side, lalu paginate
-        const allAnswers = await prisma.answer.findMany({
+        const q = await prisma.question.findUnique({
           where: {
-            questionId: q.questionId,
+            slug: questionSlug,
           },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                image: true,
-                organization: true,
-              },
-            },
-            _count: {
-              select: {
-                upvotesAnswer: true,
-                comments: true,
-              },
-            },
-            savedAnswers: {
-              where: {
-                userId: session?.user.id,
-              },
-              take: 1,
-            },
-            upvotesAnswer: true, // Ambil semua upvotes
+          select: {
+            questionId: true,
           },
         });
 
-        // Sort berdasarkan jumlah upvotes (desc) dan createdAt (desc)
-        const sortedAnswers = allAnswers.sort((a, b) => {
-          // Primary sort by upvote count
-          if (b._count.upvotesAnswer !== a._count.upvotesAnswer) {
-            return b._count.upvotesAnswer - a._count.upvotesAnswer;
-          }
-
-          // Secondary sort by createdAt
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        });
-
-        // Handle pagination
-        let startIndex = 0;
-        if (parsedCursor) {
-          // Find the index of the cursor item
-          const cursorIndex = sortedAnswers.findIndex(
-            (answer) => answer.answerId === parsedCursor.answerId,
-          );
-          if (cursorIndex !== -1) {
-            startIndex = cursorIndex + 1;
-          }
+        if (!q) {
+          logger.warn(`Question not found: slug=${questionSlug}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Pertanyaan tidak ditemukan",
+          });
         }
 
-        // Slice untuk pagination
-        const paginatedAnswers = sortedAnswers.slice(
-          startIndex,
-          startIndex + limit + 1,
+        let where: any = {
+          questionId: q.questionId,
+        };
+
+        if (sort === "recommended") {
+          const allAnswers = await prisma.answer.findMany({
+            where: {
+              questionId: q.questionId,
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  image: true,
+                  organization: true,
+                },
+              },
+              _count: {
+                select: {
+                  upvotesAnswer: true,
+                  comments: true,
+                },
+              },
+              savedAnswers: {
+                where: {
+                  userId: session?.user.id,
+                },
+                take: 1,
+              },
+              upvotesAnswer: true,
+            },
+          });
+
+          const sortedAnswers = allAnswers.sort((a, b) => {
+            if (b._count.upvotesAnswer !== a._count.upvotesAnswer) {
+              return b._count.upvotesAnswer - a._count.upvotesAnswer;
+            }
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+          });
+
+          let startIndex = 0;
+          if (parsedCursor) {
+            const cursorIndex = sortedAnswers.findIndex(
+              (answer) => answer.answerId === parsedCursor.answerId,
+            );
+            if (cursorIndex !== -1) {
+              startIndex = cursorIndex + 1;
+            }
+          }
+
+          const paginatedAnswers = sortedAnswers.slice(
+            startIndex,
+            startIndex + limit + 1,
+          );
+
+          const formattedAnswers = paginatedAnswers.map((answer) => {
+            const { savedAnswers, upvotesAnswer, ...answerWithoutBookmarks } =
+              answer;
+            return {
+              ...answerWithoutBookmarks,
+              isBookmarked: session ? savedAnswers.length > 0 : false,
+              isAlreadyUpvoted: upvotesAnswer.some(
+                (upvote) => upvote.userId === session?.user.id,
+              ),
+            };
+          });
+
+          const hasMore = formattedAnswers.length > limit;
+          const items = hasMore
+            ? formattedAnswers.slice(0, limit)
+            : formattedAnswers;
+
+          let nextCursor = null;
+          if (hasMore && items.length > 0) {
+            const lastItem = items[items.length - 1];
+            nextCursor = {
+              answerId: lastItem.answerId,
+              createdAt: lastItem.createdAt.toISOString(),
+              upvoteCount: lastItem._count.upvotesAnswer,
+            };
+          }
+
+          logger.info(
+            `Fetched ${items.length} recommended answers for questionSlug=${questionSlug}`,
+          );
+
+          return {
+            items,
+            nextCursor,
+          };
+        } else {
+          if (parsedCursor) {
+            if (sort === "asc") {
+              where = {
+                ...where,
+                OR: [
+                  { createdAt: { gt: parsedCursor.createdAt } },
+                  {
+                    createdAt: parsedCursor.createdAt,
+                    answerId: { gt: parsedCursor.answerId },
+                  },
+                ],
+              };
+            } else if (sort === "desc") {
+              where = {
+                ...where,
+                OR: [
+                  { createdAt: { lt: parsedCursor.createdAt } },
+                  {
+                    createdAt: parsedCursor.createdAt,
+                    answerId: { lt: parsedCursor.answerId },
+                  },
+                ],
+              };
+            }
+          }
+
+          const answers = await prisma.answer.findMany({
+            where,
+            take: limit + 1,
+            orderBy: {
+              createdAt: sort,
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  username: true,
+                  image: true,
+                  organization: true,
+                },
+              },
+              _count: {
+                select: {
+                  upvotesAnswer: true,
+                  comments: true,
+                },
+              },
+              upvotesAnswer: {
+                where: {
+                  userId: session?.user.id,
+                },
+                take: 1,
+              },
+              savedAnswers: {
+                where: {
+                  userId: session?.user.id,
+                },
+                take: 1,
+              },
+            },
+          });
+
+          const formattedAnswers = answers.map((answer) => {
+            const { savedAnswers, ...answerWithoutBookmarks } = answer;
+            return {
+              ...answerWithoutBookmarks,
+              isBookmarked: savedAnswers.length > 0,
+              isAlreadyUpvoted: answer.upvotesAnswer.length > 0,
+            };
+          });
+
+          const hasMore = formattedAnswers.length > limit;
+          const items = hasMore
+            ? formattedAnswers.slice(0, -1)
+            : formattedAnswers;
+
+          let nextCursor = null;
+          if (hasMore && items.length > 0) {
+            const lastItem = items[items.length - 1];
+            nextCursor = {
+              answerId: lastItem.answerId,
+              createdAt: lastItem.createdAt.toISOString(),
+              upvoteCount: lastItem._count.upvotesAnswer,
+            };
+          }
+
+          logger.info(
+            `Fetched ${items.length} answers for questionSlug=${questionSlug} with sort=${sort}`,
+          );
+
+          return {
+            items,
+            nextCursor,
+          };
+        }
+      } catch (error) {
+        logger.error(
+          `Error fetching answers: ${
+            error instanceof Error ? error.message : String(error)
+          } | questionSlug=${questionSlug}`,
         );
-
-        // Format answers
-        const formattedAnswers = paginatedAnswers.map((answer) => {
-          const { savedAnswers, upvotesAnswer, ...answerWithoutBookmarks } =
-            answer;
-          return {
-            ...answerWithoutBookmarks,
-            isBookmarked: session ? savedAnswers.length > 0 : false,
-            isAlreadyUpvoted: upvotesAnswer.some(
-              (upvote) => upvote.userId === session?.user.id,
-            ),
-          };
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Gagal mengambil jawaban, silakan coba lagi nanti",
         });
-
-        const hasMore = formattedAnswers.length > limit;
-        const items = hasMore
-          ? formattedAnswers.slice(0, limit)
-          : formattedAnswers;
-
-        // Set next cursor
-        let nextCursor = null;
-        if (hasMore && items.length > 0) {
-          const lastItem = items[items.length - 1];
-          nextCursor = {
-            answerId: lastItem.answerId,
-            createdAt: lastItem.createdAt.toISOString(),
-            upvoteCount: lastItem._count.upvotesAnswer,
-          };
-        }
-
-        return {
-          items,
-          nextCursor,
-        };
-      } else {
-        // Untuk sort asc/desc, gunakan pendekatan standard dengan cursor
-        if (parsedCursor) {
-          if (sort === "asc") {
-            where = {
-              ...where,
-              OR: [
-                { createdAt: { gt: parsedCursor.createdAt } },
-                {
-                  createdAt: parsedCursor.createdAt,
-                  answerId: { gt: parsedCursor.answerId },
-                },
-              ],
-            };
-          } else if (sort === "desc") {
-            where = {
-              ...where,
-              OR: [
-                { createdAt: { lt: parsedCursor.createdAt } },
-                {
-                  createdAt: parsedCursor.createdAt,
-                  answerId: { lt: parsedCursor.answerId },
-                },
-              ],
-            };
-          }
-        }
-
-        const answers = await prisma.answer.findMany({
-          where,
-          take: limit + 1,
-          orderBy: {
-            createdAt: sort,
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                image: true,
-                organization: true,
-              },
-            },
-            _count: {
-              select: {
-                upvotesAnswer: true,
-                comments: true,
-              },
-            },
-            upvotesAnswer: {
-              where: {
-                userId: session?.user.id,
-              },
-              take: 1,
-            },
-            savedAnswers: {
-              where: {
-                userId: session?.user.id,
-              },
-              take: 1,
-            },
-          },
-        });
-
-        // Format answers
-        const formattedAnswers = answers.map((answer) => {
-          const { savedAnswers, ...answerWithoutBookmarks } = answer;
-          return {
-            ...answerWithoutBookmarks,
-            isBookmarked: savedAnswers.length > 0,
-            isAlreadyUpvoted: answer.upvotesAnswer.length > 0,
-          };
-        });
-
-        const hasMore = formattedAnswers.length > limit;
-        const items = hasMore
-          ? formattedAnswers.slice(0, -1)
-          : formattedAnswers;
-
-        // Set next cursor
-        let nextCursor = null;
-        if (hasMore && items.length > 0) {
-          const lastItem = items[items.length - 1];
-          nextCursor = {
-            answerId: lastItem.answerId,
-            createdAt: lastItem.createdAt.toISOString(), // Convert to ISO string
-            upvoteCount: lastItem._count.upvotesAnswer,
-          };
-        }
-
-        return {
-          items,
-          nextCursor,
-        };
       }
     }),
 });

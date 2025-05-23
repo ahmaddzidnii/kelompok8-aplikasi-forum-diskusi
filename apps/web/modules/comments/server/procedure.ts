@@ -26,86 +26,100 @@ export const commentsRoute = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const { answerId, cursor, limit, sort } = input;
-      const comments = await prisma.comment.findMany({
-        where: {
-          answerId,
-          parentCommentId: null,
-          commentId: cursor?.commentId
-            ? sort == "asc"
-              ? {
-                  gt: cursor.commentId,
-                }
-              : {
-                  lt: cursor.commentId,
-                }
-            : undefined,
-        },
-        orderBy: {
-          commentId: sort ? sort : undefined,
-        },
-        take: limit + 1,
-        include: {
-          answer: {
-            select: {
-              user: {
-                select: {
-                  id: true,
+      logger.info(`Fetching top-level comments for answerId: ${answerId}`);
+      try {
+        logger.debug(
+          `Params - limit: ${limit}, cursor: ${JSON.stringify(cursor)}, sort: ${sort}`,
+        );
+        const comments = await prisma.comment.findMany({
+          where: {
+            answerId,
+            parentCommentId: null,
+            commentId: cursor?.commentId
+              ? sort == "asc"
+                ? { gt: cursor.commentId }
+                : { lt: cursor.commentId }
+              : undefined,
+          },
+          orderBy: {
+            commentId: sort ? sort : undefined,
+          },
+          take: limit + 1,
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
                 },
               },
             },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              image: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+            _count: {
+              select: {
+                childComments: true,
+              },
             },
           },
-          _count: {
-            select: {
-              childComments: true,
-            },
-          },
-        },
-      });
+        });
 
-      if (!comments) {
+        if (!comments) {
+          logger.warn(`No comments found for answerId: ${answerId}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comments not found",
+          });
+        }
+
+        const hasMore = comments.length > limit;
+        const items = hasMore ? comments.slice(0, -1) : comments;
+        const lastItem = items[items.length - 1];
+        const nextCursor = hasMore
+          ? {
+              commentId: lastItem.commentId,
+            }
+          : null;
+
+        const formattedComments = items.map((comment) => ({
+          commentId: comment.commentId,
+          user: {
+            id: comment.user.id,
+            name: comment.user.name,
+            username: comment.user.username,
+            image: comment.user.image,
+          },
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          countReplies: comment._count.childComments,
+          isEdited: comment.createdAt !== comment.updatedAt,
+          isOwner: comment.user.id === comment.answer.user.id,
+        }));
+
+        logger.info(
+          `Fetched ${items.length} top-level comments for answerId: ${answerId}`,
+        );
+        return {
+          items: formattedComments,
+          nextCursor,
+        };
+      } catch (error) {
+        logger.error(
+          `Error fetching top-level comments for answerId ${answerId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Comments not found",
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch comments",
         });
       }
-
-      const hasMore = comments.length > limit;
-      const items = hasMore ? comments.slice(0, -1) : comments;
-      const lastItem = items[items.length - 1];
-      const nextCursor = hasMore
-        ? {
-            commentId: lastItem.commentId,
-          }
-        : null;
-
-      const formattedComments = items.map((comment) => ({
-        commentId: comment.commentId,
-        user: {
-          id: comment.user.id,
-          name: comment.user.name,
-          username: comment.user.username,
-          image: comment.user.image,
-        },
-        content: comment.content,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        countReplies: comment._count.childComments,
-        isEdited: comment.createdAt !== comment.updatedAt,
-        isOwner: comment.user.id === comment.answer.user.id,
-      }));
-
-      return {
-        items: formattedComments,
-        nextCursor,
-      };
     }),
 
   getRepliesByParentCommentId: dynamicProcedure
@@ -122,79 +136,91 @@ export const commentsRoute = createTRPCRouter({
     .query(async ({ input }) => {
       const { parentCommentId, cursor } = input;
       const LIMIT = config.replies.defaultLimit;
-
-      const replies = await prisma.comment.findMany({
-        where: {
-          parentCommentId,
-          commentId: cursor?.commentId
-            ? {
-                gt: cursor.commentId,
-              }
-            : undefined,
-        },
-        take: LIMIT + 1,
-        include: {
-          answer: {
-            select: {
-              user: {
-                select: {
-                  id: true,
+      logger.info(`Fetching replies for parentCommentId: ${parentCommentId}`);
+      try {
+        logger.debug(
+          `Params - limit: ${LIMIT}, cursor: ${JSON.stringify(cursor)}`,
+        );
+        const replies = await prisma.comment.findMany({
+          where: {
+            parentCommentId,
+            commentId: cursor?.commentId ? { gt: cursor.commentId } : undefined,
+          },
+          take: LIMIT + 1,
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+            replyToComment: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
                 },
               },
             },
           },
+        });
+
+        const hasMore = replies.length > LIMIT;
+        const items = hasMore ? replies.slice(0, -1) : replies;
+        const lastItem = items[items.length - 1];
+        const nextCursor = hasMore
+          ? {
+              commentId: lastItem.commentId,
+            }
+          : null;
+
+        const formattedReplies = items.map((reply) => ({
+          commentId: reply.commentId,
           user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              image: true,
-            },
+            id: reply.user.id,
+            name: reply.user.name,
+            username: reply.user.username,
+            image: reply.user.image,
           },
-          replyToComment: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                },
-              },
-            },
+          content: reply.content,
+          createdAt: reply.createdAt,
+          updatedAt: reply.updatedAt,
+          replyingTo: {
+            username: reply.replyToComment?.user.username,
           },
-        },
-      });
+          isEdited: reply.createdAt !== reply.updatedAt,
+          isOwner: reply.user.id === reply.answer.user.id,
+        }));
 
-      const hasMore = replies.length > LIMIT;
-      const items = hasMore ? replies.slice(0, -1) : replies;
-      const lastItem = items[items.length - 1];
-      const nextCursor = hasMore
-        ? {
-            commentId: lastItem.commentId,
-          }
-        : null;
-
-      const formattedReplies = items.map((reply) => ({
-        commentId: reply.commentId,
-        user: {
-          id: reply.user.id,
-          name: reply.user.name,
-          username: reply.user.username,
-          image: reply.user.image,
-        },
-        content: reply.content,
-        createdAt: reply.createdAt,
-        updatedAt: reply.updatedAt,
-        replyingTo: {
-          username: reply.replyToComment?.user.username,
-        },
-        isEdited: reply.createdAt !== reply.updatedAt,
-        isOwner: reply.user.id === reply.answer.user.id,
-      }));
-
-      return {
-        items: formattedReplies,
-        nextCursor,
-      };
+        logger.info(
+          `Fetched ${items.length} replies for parentCommentId: ${parentCommentId}`,
+        );
+        return {
+          items: formattedReplies,
+          nextCursor,
+        };
+      } catch (error) {
+        logger.error(
+          `Error fetching replies for parentCommentId ${parentCommentId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch replies",
+        });
+      }
     }),
 
   createTopLevelComment: protectedProcedure
@@ -209,6 +235,9 @@ export const commentsRoute = createTRPCRouter({
         const { answerId, content } = input;
         const userId = ctx.session?.user.id as string;
 
+        logger.info(
+          `Creating top-level comment for answerId: ${answerId} by userId: ${userId}`,
+        );
         const comment = await prisma.comment.create({
           data: {
             content,
@@ -257,9 +286,14 @@ export const commentsRoute = createTRPCRouter({
           isOwner: comment.user.id === comment.answer.user.id,
         };
 
+        logger.info(
+          `Top-level comment created: commentId=${comment.commentId}, answerId=${answerId}, userId=${userId}`,
+        );
         return filteredComment;
       } catch (error) {
-        console.error("Error creating top-level comment:", error);
+        logger.error(
+          `Error creating top-level comment: ${error instanceof Error ? error.message : String(error)}`,
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create comment",
@@ -294,7 +328,10 @@ export const commentsRoute = createTRPCRouter({
           logger.warn(
             `Parent comment not found: parentCommentId=${parentCommentId}`,
           );
-          throw new Error("Parent comment not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Parent comment not found",
+          });
         }
 
         const reply = await prisma.comment.create({
