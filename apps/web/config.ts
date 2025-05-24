@@ -27,4 +27,7 @@ export const config = {
     defaultLimit: 10,
     maxLength: 500,
   },
+  votes: {
+    limitUserShow: 5,
+  },
 };

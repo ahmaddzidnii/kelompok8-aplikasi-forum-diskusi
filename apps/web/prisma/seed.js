@@ -10,6 +10,7 @@ const load = async () => {
       return prisma.category.create({
         data: {
           name: category.name,
+          description: category.description,
         },
       });
     });

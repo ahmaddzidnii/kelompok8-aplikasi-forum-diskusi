@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-
+import { useSession } from "next-auth/react";
 
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -15,9 +15,7 @@ import { Loader } from "@/components/Loader";
 
 export const QuestionsList = () => {
   return (
-
     <Suspense fallback={<Loader />}>
-
       <ErrorBoundary fallback={<InternalServerError />}>
         <QuestionsListSuspense />
       </ErrorBoundary>
@@ -26,6 +24,8 @@ export const QuestionsList = () => {
 };
 
 const QuestionsListSuspense = () => {
+  const { data: session } = useSession();
+
   const [data, query] = trpc.questions.getMany.useSuspenseInfiniteQuery(
     {
       limit: config.questions.defaultLimit,
@@ -47,8 +47,12 @@ const QuestionsListSuspense = () => {
         <li key={question.questionId + idx} className="mb-4">
           <QuestionCard
             question={{
-              content: question.content || "Apa itu Next.js?",
               questonSlug: question.slug,
+              content: question.content || "Apa itu Next.js?",
+              categories: question.questionCategories.map((category) => ({
+                categoryId: category.category.categoryId,
+                name: category.category.name,
+              })),
             }}
             author={{
               name: question.user.name || "Ahmad Zidni Hidayat",
@@ -58,6 +62,7 @@ const QuestionsListSuspense = () => {
                 question.user.organization || "Web Developer at XYZ",
             }}
             createdAt={question.createdAt.toString()}
+            hasAccessToModify={session?.user.id == question.user.id}
           />
         </li>
       ))}

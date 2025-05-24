@@ -11,6 +11,7 @@ import {
 
 import { answerSchema } from "../schema";
 import logger from "@/lib/logger";
+import { config } from "@/config";
 
 export const answersRouter = createTRPCRouter({
   createAnswer: protectedProcedure
@@ -185,9 +186,37 @@ export const answersRouter = createTRPCRouter({
                 },
                 take: 1,
               },
-              upvotesAnswer: true,
+              upvotesAnswer: {
+                take: config.votes.limitUserShow,
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      username: true,
+                      image: true,
+                    },
+                  },
+                },
+              },
             },
           });
+
+          let userVotedAnswerIds: string[] = [];
+          if (session?.user.id) {
+            const userVotes = await prisma.upvoteAnswer.findMany({
+              where: {
+                userId: session.user.id,
+                answerId: {
+                  in: allAnswers.map((answer) => answer.answerId),
+                },
+              },
+              select: {
+                answerId: true,
+              },
+            });
+            userVotedAnswerIds = userVotes.map((vote) => vote.answerId);
+          }
 
           const sortedAnswers = allAnswers.sort((a, b) => {
             if (b._count.upvotesAnswer !== a._count.upvotesAnswer) {
@@ -219,9 +248,13 @@ export const answersRouter = createTRPCRouter({
             return {
               ...answerWithoutBookmarks,
               isBookmarked: session ? savedAnswers.length > 0 : false,
-              isAlreadyUpvoted: upvotesAnswer.some(
-                (upvote) => upvote.userId === session?.user.id,
-              ),
+              isAlreadyUpvoted: userVotedAnswerIds.includes(answer.answerId),
+              usersVoteUp: upvotesAnswer.map((upvote) => ({
+                id: upvote.user.id,
+                name: upvote.user.name || "User",
+                username: upvote.user.username || "user",
+                image: upvote.user.image || "/avatar.png",
+              })),
             };
           });
 
@@ -298,10 +331,17 @@ export const answersRouter = createTRPCRouter({
                 },
               },
               upvotesAnswer: {
-                where: {
-                  userId: session?.user.id,
+                take: config.votes.limitUserShow,
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      username: true,
+                      image: true,
+                    },
+                  },
                 },
-                take: 1,
               },
               savedAnswers: {
                 where: {
@@ -312,12 +352,35 @@ export const answersRouter = createTRPCRouter({
             },
           });
 
+          const userVotedAnswerIds: string[] = [];
+
+          if (session?.user.id) {
+            const userVotes = await prisma.upvoteAnswer.findMany({
+              where: {
+                userId: session.user.id,
+                answerId: {
+                  in: answers.map((answer) => answer.answerId),
+                },
+              },
+              select: {
+                answerId: true,
+              },
+            });
+            userVotedAnswerIds.push(...userVotes.map((vote) => vote.answerId));
+          }
+
           const formattedAnswers = answers.map((answer) => {
             const { savedAnswers, ...answerWithoutBookmarks } = answer;
             return {
               ...answerWithoutBookmarks,
               isBookmarked: savedAnswers.length > 0,
-              isAlreadyUpvoted: answer.upvotesAnswer.length > 0,
+              isAlreadyUpvoted: userVotedAnswerIds.includes(answer.answerId),
+              usersVoteUp: answer.upvotesAnswer.map((upvote) => ({
+                id: upvote.user.id,
+                name: upvote.user.name || "User",
+                username: upvote.user.username || "user",
+                image: upvote.user.image || "/avatar.png",
+              })),
             };
           });
 

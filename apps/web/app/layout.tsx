@@ -9,6 +9,7 @@ import { Providers } from "@/providers";
 
 import "./globals.css";
 import Scroll from "@/components/Scroll";
+import { Modals } from "@/components/Modals";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700"],
@@ -44,9 +45,12 @@ export default function RootLayout({
           }}
           transition={Bounce}
         />
-
         <Scroll />
-        <Providers>{children}</Providers>
+
+        <Providers>
+          <Modals />
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -43,9 +43,14 @@ export const QuestionDetail = async ({ threadSlug }: QuestionDetailProps) => {
           questonSlug:
             question.slug || "/threads/mengapa-react-js-sangat-popular-637353",
           content: question.content || "Mengapa React JS sangat populer?",
+          categories: question.questionCategories.map((category) => ({
+            categoryId: category.category.categoryId,
+            name: category.category.name,
+          })),
         }}
         createdAt={question.createdAt.toString()}
         withButton={false}
+        hasAccessToModify={false}
       />
 
       {session?.user &&

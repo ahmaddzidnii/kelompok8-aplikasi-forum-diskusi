@@ -2,7 +2,11 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { prisma } from "@/lib/prisma";
-import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "@/trpc/init";
 import logger from "@/lib/logger";
 
 export const votesRouter = createTRPCRouter({
@@ -170,6 +174,52 @@ export const votesRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to process vote",
+        });
+      }
+    }),
+  getListUserVoteByAnswerId: publicProcedure
+    .input(
+      z.object({
+        answerId: z.string().min(1, "Answer ID is required"),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { answerId } = input;
+      logger.info(`Fetching user votes for answer ID: ${answerId}`);
+      try {
+        const votes = await prisma.upvoteAnswer.findMany({
+          where: {
+            answerId: answerId,
+          },
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+          },
+        });
+
+        logger.info(
+          `Fetched ${votes.length} user votes for answer ID ${answerId}`,
+        );
+
+        return votes.map((vote) => ({
+          id: vote.user.id || "",
+          name: vote.user.name || "",
+          username: vote.user.username || "",
+          image: vote.user.image || "/avatar.png",
+        }));
+      } catch (error) {
+        logger.error(
+          `Error fetching user votes for answer ID ${answerId}: ${(error as Error).message}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch user votes",
         });
       }
     }),
