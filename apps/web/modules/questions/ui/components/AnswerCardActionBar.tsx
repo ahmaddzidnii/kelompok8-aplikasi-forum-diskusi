@@ -44,7 +44,6 @@ export const AnswerCardActionBar = ({
         (oldData) => {
           if (!oldData) return oldData;
 
-          // Keep the page structure intact
           return {
             ...oldData,
             pages: oldData.pages.map((page) => ({
@@ -68,6 +67,13 @@ export const AnswerCardActionBar = ({
           };
         },
       );
+
+      // TODO: Implement best solution invalidation in the future
+      trpcUtils.answers.getMany.invalidate({
+        questionSlug,
+        limit: config.answers.defaultLimit,
+        sort: answerSort,
+      });
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {

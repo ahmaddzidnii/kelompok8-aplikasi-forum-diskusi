@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ErrorBoundary } from "react-error-boundary";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AutosizeTextarea } from "@/components/ui/textarea-auto-size";
@@ -117,7 +117,6 @@ export const AskFormSuspense = () => {
             className="w-full md:w-auto"
             size="sm"
             type="submit"
-            disabled={!form.formState.isValid}
           >
             Tambah pertanyaan
           </LoadingButton>

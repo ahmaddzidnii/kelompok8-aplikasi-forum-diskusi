@@ -8,6 +8,7 @@ export const askFormSchema = z.object({
         value: z.string(),
       }),
     )
+    .max(5, "Pilih maksimal 5 kategori")
     .nonempty("Pilih minimal 1 kategori"),
   questionContent: z.string().min(3, "Pertanyaan harus lebih dari 3 karakter"),
 });

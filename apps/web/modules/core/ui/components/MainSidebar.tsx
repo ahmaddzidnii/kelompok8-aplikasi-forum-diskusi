@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaCircleQuestion } from "react-icons/fa6";
 import { FaBookmark, FaHome } from "react-icons/fa";
-import { RiQuestionAnswerFill } from "react-icons/ri";
+import { MdCategory } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,12 @@ const menuItems = [
     authRequired: false,
   },
   {
+    path: "/questions/categories",
+    label: "Kategori Pertanyaan",
+    icon: MdCategory,
+    authRequired: false,
+  },
+  {
     path: "/questions/my-question",
     label: "Pertanyaan anda",
     icon: FaCircleQuestion,
@@ -28,12 +34,6 @@ const menuItems = [
     path: "/bookmarks",
     label: "Jawaban tersimpan",
     icon: FaBookmark,
-    authRequired: true,
-  },
-  {
-    path: "/answers",
-    label: "Jawab pertanyaan",
-    icon: RiQuestionAnswerFill,
     authRequired: true,
   },
 ];

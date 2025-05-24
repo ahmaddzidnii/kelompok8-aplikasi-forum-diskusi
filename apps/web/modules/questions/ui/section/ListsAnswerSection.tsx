@@ -76,6 +76,7 @@ const ListsAnswerSectionSuspense = ({
               isAlreadyUpvoted={answer.isAlreadyUpvoted}
               answerSort={answerSort ? answerSort : "recommended"}
               questionSlug={questionSlug}
+              usersVoteUp={answer.usersVoteUp}
             />
           </CommentProvider>
         </li>

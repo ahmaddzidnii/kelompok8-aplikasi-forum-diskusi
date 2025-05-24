@@ -1,6 +1,7 @@
 import { HydrateClient, trpc } from "@/trpc/server";
 import { QuestionDetail } from "@/modules/questions/ui/views/QuestionDetail";
 import { config } from "@/config";
+import { Metadata } from "next";
 
 interface QuestionDetailPageProps {
   params: {
@@ -8,6 +9,20 @@ interface QuestionDetailPageProps {
   };
   searchParams: {
     answerSort: "asc" | "desc" | "recommended";
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: QuestionDetailPageProps): Promise<Metadata> {
+  const slug = params.threadsSlug;
+
+  const pageTitle = await trpc.questions.getPageTitle({
+    slug,
+  });
+
+  return {
+    title: pageTitle,
   };
 }
 

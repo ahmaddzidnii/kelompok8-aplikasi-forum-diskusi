@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { useSession } from "next-auth/react";
 
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -26,6 +27,8 @@ const ThreadsListSectionSuspense = ({
 }: {
   categoryId?: string;
 }) => {
+  const { data: session } = useSession();
+
   const [data, query] = trpc.questions.getRecommended.useSuspenseInfiniteQuery(
     {
       categoryId,
@@ -57,8 +60,13 @@ const ThreadsListSectionSuspense = ({
               questonSlug:
                 question.slug || "mengapa-react-js-sangat-popular-637353",
               content: question.content || "Mengapa React JS sangat populer?",
+              categories: question.questionCategories.map((category) => ({
+                categoryId: category.category.categoryId,
+                name: category.category.name,
+              })),
             }}
             createdAt={question.createdAt.toString() || "2023-10-01T12:00:00Z"}
+            hasAccessToModify={session?.user.id == question.user.id}
           />
         </li>
       ))}
