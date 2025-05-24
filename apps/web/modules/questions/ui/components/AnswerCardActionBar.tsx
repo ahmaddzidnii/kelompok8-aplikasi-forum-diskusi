@@ -74,6 +74,9 @@ export const AnswerCardActionBar = ({
         limit: config.answers.defaultLimit,
         sort: answerSort,
       });
+
+      // Invalidate the user's upvoted answers cache
+      trpcUtils.votes.getListUserVoteByAnswerId.invalidate();
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {

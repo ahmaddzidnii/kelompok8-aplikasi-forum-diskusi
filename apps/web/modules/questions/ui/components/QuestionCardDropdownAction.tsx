@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDeleteQuestionMutation } from "../../hooks/useDeleteQuestionMutation";
 import { useConfirm } from "@/hooks/useConfirm";
+import { useEditQuestionModal } from "../../hooks/useEditQuestionModal";
 
 interface QuestionCardDropdownActionProps {
   slug: string;
@@ -20,6 +21,7 @@ interface QuestionCardDropdownActionProps {
 export const QuestionCardDropdownAction = ({
   slug,
 }: QuestionCardDropdownActionProps) => {
+  const { open } = useEditQuestionModal();
   const deleteQuestionMutation = useDeleteQuestionMutation({
     slug,
   });
@@ -30,7 +32,7 @@ export const QuestionCardDropdownAction = ({
   );
 
   const handleEdit = () => {
-    // Handle edit action
+    open(slug);
   };
 
   const handleDelete = async () => {

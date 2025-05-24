@@ -8,7 +8,10 @@ import {
   publicProcedure,
 } from "@/trpc/init";
 
-import { askFormSchema } from "@/modules/questions/schema";
+import {
+  askFormSchema,
+  updateQuestionSchema,
+} from "@/modules/questions/schema";
 import { generateQuestion } from "./services/generateQuestion";
 import { prisma } from "@/lib/prisma";
 
@@ -284,6 +287,68 @@ export const questionsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch page title",
+        });
+      }
+    }),
+  edit: protectedProcedure
+    .input(updateQuestionSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { session } = ctx;
+      const { slug, categories, questionContent } = input;
+      logger.info(`Editing question with slug: ${slug}`);
+
+      try {
+        const question = await prisma.question.findUnique({
+          where: {
+            slug,
+          },
+        });
+
+        if (!question) {
+          logger.warn(`Question not found for slug: ${slug}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Question not found",
+          });
+        }
+
+        if (question.userId !== session?.user.id) {
+          logger.warn(
+            `User ${session?.user.id} does not have permission to edit this question`,
+          );
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to edit this question",
+          });
+        }
+
+        const updatedQuestion = await prisma.question.update({
+          where: {
+            slug,
+          },
+          data: {
+            content: questionContent,
+            questionCategories: {
+              deleteMany: {},
+              create: categories.map((category) => ({
+                categoryId: category.value,
+              })),
+            },
+          },
+        });
+
+        logger.info(`Question with slug ${slug} updated successfully`);
+        return {
+          message: "Question updated successfully",
+          question: updatedQuestion,
+        };
+      } catch (error) {
+        logger.error(
+          `Error editing question with slug ${slug}: ${(error as Error).message}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to edit question",
         });
       }
     }),

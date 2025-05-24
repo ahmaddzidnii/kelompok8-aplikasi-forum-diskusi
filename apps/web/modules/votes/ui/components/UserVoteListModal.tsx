@@ -12,6 +12,7 @@ import { useUserVoteListModal } from "../../hooks/useUserVoteListModal";
 import { trpc } from "@/trpc/client";
 import { InternalServerError } from "@/components/InternalServerErrorFallback";
 import { Loader } from "@/components/Loader";
+import { EmptyState } from "@/components/EmptyState";
 
 export const UserVoteListModal = () => {
   const { answerId, isOpen, reset } = useUserVoteListModal();
@@ -81,11 +82,7 @@ export const UserVoteListModal = () => {
       </ul>
     );
   } else {
-    content = (
-      <p className="p-4 text-center text-sm text-gray-500">
-        Tidak ada yang mendukung jawaban ini.
-      </p>
-    );
+    content = <EmptyState />;
   }
 
   return (
