@@ -26,9 +26,10 @@ import {
 
 import { useAnswerModalStore } from "@/modules/questions/ui/store/useAnswerModalStore";
 import { UserMeta } from "./UserMeta";
-import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/trpc/client";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { MinimalTiptapEditor } from "@/components/minimal-tiptap";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const AnswerModalForm = () => {
   const { data, status } = useSession();
@@ -51,7 +52,34 @@ export const AnswerModalForm = () => {
   });
 
   const answerSchema = z.object({
-    content: z.string().min(1, { message: "Jawaban tidak boleh kosong" }),
+    content: z.string().refine(
+      (val) => {
+        try {
+          const parsed = JSON.parse(val);
+
+          // Basic check
+          if (parsed?.type !== "doc" || !Array.isArray(parsed.content)) {
+            return false;
+          }
+
+          const content = parsed.content;
+
+          // Jika semua paragraph kosong
+          const hasNonEmptyParagraph = content.some((node: any) => {
+            if (node.type !== "paragraph") return true; // dianggap non-kosong jika bukan paragraph
+            if (!Array.isArray(node.content)) return false;
+            return node.content.length > 0; // ada isinya
+          });
+
+          return hasNonEmptyParagraph;
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: "Jawaban tidak boleh kosong",
+      },
+    ),
   });
 
   const form = useForm<z.infer<typeof answerSchema>>({
@@ -76,10 +104,10 @@ export const AnswerModalForm = () => {
     <ResponsiveModal open={isOpen} onOpenChange={handleClose}>
       <ResponsiveModalContent
         side="bottom"
-        className="w-full"
+        className="w-full lg:h-[900px]"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <ResponsiveModalHeader>
+        <ResponsiveModalHeader className="h-full">
           <UserMeta
             avatar={data?.user?.image || "/avatar.png"}
             name={data?.user?.name || "Ahmad Zidni Hidayat"}
@@ -89,8 +117,8 @@ export const AnswerModalForm = () => {
             withBio={false}
           />
 
-          <div className="flex h-[400px] flex-col gap-2">
-            <p className="text-lg font-semibold text-foreground">
+          <div className="flex flex-1 flex-col gap-2">
+            <p className="text-start text-lg font-semibold text-foreground">
               {questionContent || "Judul Pertanyaan"}
             </p>
 
@@ -106,11 +134,22 @@ export const AnswerModalForm = () => {
                   render={({ field }) => (
                     <FormItem className="h-full">
                       <FormControl>
-                        <Textarea
-                          className="h-full resize-none"
-                          placeholder="Tulis jawaban anda.."
-                          {...field}
-                        />
+                        <TooltipProvider>
+                          <MinimalTiptapEditor
+                            placeholder="Tulis jawaban anda.."
+                            className="h-full w-full focus-within:border-foreground"
+                            editorContentClassName="p-5 overflow-y-auto flex-1"
+                            immediatelyRender={false}
+                            output="json"
+                            autofocus={true}
+                            editable={true}
+                            editorClassName="focus:outline-none max-h-56"
+                            onChange={(value) => {
+                              field.onChange(JSON.stringify(value));
+                            }}
+                            value={field.value}
+                          />
+                        </TooltipProvider>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

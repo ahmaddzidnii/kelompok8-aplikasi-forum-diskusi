@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { type JsonValue } from "@prisma/client/runtime/library";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { CommentView } from "@/modules/comments/ui/components/CommentView";
@@ -8,6 +9,9 @@ import { UserMeta } from "./UserMeta";
 import { AnswerCardActionBar } from "./AnswerCardActionBar";
 import { useUserVoteListModal } from "@/modules/votes/hooks/useUserVoteListModal";
 
+import "@/components/minimal-tiptap/styles/index.css";
+import { TruncatedContent } from "./TruncatedContent";
+
 interface AnswerCardProps {
   author: {
     username: string;
@@ -15,7 +19,7 @@ interface AnswerCardProps {
     avatar: string;
     bio?: string;
   };
-  answerContent: string;
+  answerContent: JsonValue;
   answerId: string;
   count: {
     upVote: number;
@@ -63,7 +67,7 @@ export const AnswerCard = ({
           createdAt={createdAt}
         />
 
-        <p className="text-base font-semibold">{answerContent}</p>
+        <TruncatedContent content={answerContent} />
 
         {usersVoteUp.length > 0 && (
           <div

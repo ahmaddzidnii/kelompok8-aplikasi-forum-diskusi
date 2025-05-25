@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { FaBookmark } from "react-icons/fa";
+import { type JsonValue } from "@prisma/client/runtime/library";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserMeta } from "@/modules/questions/ui/components/UserMeta";
 import { trpc } from "@/trpc/client";
 import { config } from "@/config";
+import { TruncatedContent } from "@/modules/questions/ui/components/TruncatedContent";
 
 interface BookmarkCardProps {
   author: {
@@ -15,7 +17,7 @@ interface BookmarkCardProps {
     avatar: string;
     bio?: string;
   };
-  answerContent: string;
+  answerContent: JsonValue;
   answerId: string;
   question: {
     content: string;
@@ -41,7 +43,6 @@ export const BookmarkCard = ({
         },
         (oldData) => {
           if (!oldData) return oldData;
-
           // For bookmark deletion, remove the item with matching bookmarkId from the cache
           return {
             ...oldData,
@@ -86,7 +87,7 @@ export const BookmarkCard = ({
             {question.content}
           </Link>
         </p>
-        <p className="text-sm">{answerContent}</p>
+        <TruncatedContent content={answerContent} />
 
         <div className="flex items-center gap-2 border-t py-2.5">
           <Button
