@@ -25,7 +25,6 @@ export const answersRouter = createTRPCRouter({
           `Attempting to create answer: questionId=${questionId}, userId=${session?.user.id}`,
         );
 
-        // 1. Cek keberadaan pertanyaan
         const question = await prisma.question.findUnique({
           where: { questionId },
           select: { userId: true, slug: true },
@@ -54,7 +53,7 @@ export const answersRouter = createTRPCRouter({
           data: {
             userId: session?.user.id!,
             questionId,
-            content,
+            content: JSON.parse(content),
           },
         });
 
