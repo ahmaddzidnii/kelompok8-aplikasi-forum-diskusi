@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
-import { randomUUID } from "crypto";
+import { auth } from "@/auth";
+import { nanoid } from "@/lib/nanoid";
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
 // Handle upload media
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (!session) {
+      return NextResponse.json(
+        { message: "Unauthorized", data: null },
+        { status: 401 },
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
@@ -21,7 +31,10 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const fileName = `media/${randomUUID()}.${file.name.split(".").pop()}`;
+    const timestamp = new Date().getTime();
+    const extension = file.name.split(".").pop() ?? "jpg";
+
+    const fileName = `media/${session.user.id}/answers/${timestamp}_${nanoid(6)}.${extension}`;
 
     await s3.send(
       new PutObjectCommand({
