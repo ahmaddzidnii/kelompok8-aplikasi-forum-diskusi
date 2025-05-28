@@ -125,7 +125,7 @@ export const AnswerModalForm = () => {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="flex-1"
+                className="h-96"
                 id="answer-form"
               >
                 <FormField
@@ -137,13 +137,13 @@ export const AnswerModalForm = () => {
                         <TooltipProvider>
                           <MinimalTiptapEditor
                             placeholder="Tulis jawaban anda.."
-                            className="h-full w-full focus-within:border-foreground"
-                            editorContentClassName="p-5 overflow-y-auto flex-1"
+                            className="h-full w-full overflow-hidden focus-within:border-foreground"
+                            editorContentClassName="p-5 flex-1 overflow-y-auto max-h-[calc(100vh-200px)]"
                             immediatelyRender={false}
                             output="json"
                             autofocus={true}
                             editable={true}
-                            editorClassName="focus:outline-none max-h-56"
+                            editorClassName="focus:outline-none"
                             onChange={(value) => {
                               field.onChange(JSON.stringify(value));
                             }}

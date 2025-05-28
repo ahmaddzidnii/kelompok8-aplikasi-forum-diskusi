@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { type JsonValue } from "@prisma/client/runtime/library";
-
 import { cn } from "@/lib/utils";
 import { Loader } from "@/components/Loader";
 import { transformJsonToHtml } from "@/lib/transform-json-to-html";
@@ -16,7 +15,7 @@ interface TruncatedContentProps {
 
 export const TruncatedContent = ({
   content,
-  maxHeight = 128, // 32 * 4 = 128px (h-32)
+  maxHeight = 256, // 64 * 4 = 256px (h-64)
   className,
 }: TruncatedContentProps) => {
   const [isClient, setIsClient] = useState(false);
@@ -59,9 +58,13 @@ export const TruncatedContent = ({
           "minimal-tiptap-editor overflow-hidden transition-all duration-500 ease-in-out",
           isTruncated && needsTruncation ? "relative" : "",
         )}
-        style={{
-          maxHeight: isTruncated && needsTruncation ? `${maxHeight}px` : "none",
-        }}
+        style={
+          isTruncated && needsTruncation
+            ? {
+                maxHeight: `${maxHeight}px`,
+              }
+            : {}
+        }
       >
         <div
           className="ProseMirror"
@@ -74,18 +77,18 @@ export const TruncatedContent = ({
       {/* Gradient Overlay - hanya tampil jika truncated dan butuh truncation */}
       {isTruncated && needsTruncation && (
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-sidebar via-background/90 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/90 via-white/70 to-transparent"
           style={{ bottom: 0 }}
         />
       )}
 
       {/* Toggle Button - hanya tampil jika konten butuh truncation */}
       {needsTruncation && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex justify-center bg-transparent">
           <button
             type="button"
             onClick={handleToggleTruncate}
-            style={{ zIndex: 999 }}
+            style={{ zIndex: 20 }}
             className={cn(
               "group flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2",
               "text-sm font-medium text-gray-700 shadow-sm transition-all duration-200",

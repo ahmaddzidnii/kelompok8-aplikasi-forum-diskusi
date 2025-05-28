@@ -106,7 +106,7 @@ const createExtensions = (placeholder: string) => [
         }),
       );
     },
-    async onImageRemoved({ id, src }) {
+    onImageRemoved: async ({ id, src }) => {
       console.log("Image removed", { id, src });
     },
     onValidationError(errors) {
@@ -155,10 +155,24 @@ const createExtensions = (placeholder: string) => [
     },
     onPaste: (editor, files) => {
       files.forEach(async (file) => {
-        const src = await fileToBase64(file);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload/media", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
+        const data: {
+          data: { url: string; key: string };
+        } = await response.json();
+        // const src = await fileToBase64(file);
         editor.commands.insertContent({
           type: "image",
-          attrs: { src },
+          attrs: { src: data.data.url, id: data.data.key },
         });
       });
     },
