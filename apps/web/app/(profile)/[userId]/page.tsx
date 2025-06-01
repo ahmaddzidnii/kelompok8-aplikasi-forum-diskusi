@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ChevronDownIcon } from "lucide-react";
+// import { ChevronDownIcon } from "lucide-react";
 
 import logger from "@/lib/logger";
 import Truncate from "@/components/Truncate";
-import { Button } from "@/components/ui/button";
-import { ContributionGraph } from "@/modules/user-profile/ui/components/ContributionGraph";
+// import { Button } from "@/components/ui/button";
+// import { ContributionGraph } from "@/modules/user-profile/ui/components/ContributionGraph";
 
 interface PageProps {
   params: {
@@ -73,7 +73,7 @@ const Page = ({ params }: PageProps) => {
           </ul>
         </div>
       </div>
-      <div className="flex w-full">
+      {/* <div className="flex w-full">
         <div className="w-full lg:w-5/6">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-base">1,539 contributions in the last year</p>
@@ -93,7 +93,7 @@ const Page = ({ params }: PageProps) => {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

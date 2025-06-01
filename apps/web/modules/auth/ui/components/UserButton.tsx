@@ -49,10 +49,17 @@ export const UserButton = () => {
       {
         label: "Profil Anda",
         href: `/@${data?.user.username}`,
+        render: true,
+      },
+      {
+        label: "Admin Area",
+        href: `/admin`,
+        render: data?.user.role == "SUPER_ADMIN",
       },
       {
         label: "Pengaturan",
         href: "/settings/profile",
+        render: true,
       },
     ],
   ];
@@ -77,15 +84,18 @@ export const UserButton = () => {
         </p>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {menuItems[0].map((item) => (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              asChild
-              key={item.label}
-            >
-              <Link href={item.href}>{item.label}</Link>
-            </DropdownMenuItem>
-          ))}
+          {menuItems[0].map(
+            (item) =>
+              item.render && (
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  asChild
+                  key={item.label}
+                >
+                  <Link href={item.href}>{item.label}</Link>
+                </DropdownMenuItem>
+              ),
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer" onClick={() => signOut()}>
