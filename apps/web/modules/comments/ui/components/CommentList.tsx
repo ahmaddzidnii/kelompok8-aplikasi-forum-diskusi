@@ -1,38 +1,36 @@
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useState, useCallback } from "react";
-import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { id } from "date-fns/locale";
 import { formatDistanceToNow } from "date-fns";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { id } from "date-fns/locale";
+import { toast } from "react-toastify";
+import { FaChevronDown, FaChevronUp, FaFlag } from "react-icons/fa";
+import { IoMdMore } from "react-icons/io";
+import { MdEdit } from "react-icons/md";
+import { FaRegTrashCan } from "react-icons/fa6";
 
 import { AutosizeTextarea } from "@/components/ui/textarea-auto-size";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useComment } from "@/modules/comments/hooks/UseComment";
-import { ReplyProvider } from "@/modules/comments/context/ReplyContext";
-import { useReplies } from "@/modules/comments/hooks/useReplies";
+import { AvatarComponent } from "@/components/AvatarComponent";
 import { Loader } from "@/components/Loader";
 import { EmptyState } from "@/components/EmptyState";
 import { InfiniteScroll } from "@/components/InfiniteScroll";
-import { AvatarComponent } from "@/components/AvatarComponent";
-import { useReplyMutation } from "@/modules/comments/hooks/useReplyMutation";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-type CommentType = {
-  commentId: string;
-  user: {
-    id: string;
-    name: string | null;
-    username: string | null;
-    image: string | null;
-  };
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  countReplies: number;
-  isEdited: boolean;
-  isOwner: boolean;
-};
+import { useComment } from "@/modules/comments/hooks/UseComment";
+import { useReplies } from "@/modules/comments/hooks/useReplies";
+import { useReplyMutation } from "@/modules/comments/hooks/useReplyMutation";
+import { ReplyProvider } from "@/modules/comments/context/ReplyContext";
+import { hasPermission } from "../../server/utils";
+import { Comment as CommentType } from "../../context/CommentContext";
+import { cn } from "@/lib/utils";
 
 export const CommentList = () => {
   const { comments, query } = useComment();
@@ -101,70 +99,133 @@ const Comment = ({ comment }: { comment: CommentType }) => {
 
   const hasReplies = comment.countReplies > 0;
 
+  const options = useMemo(() => {
+    type OptionType = {
+      label: string;
+      icon: React.ElementType;
+      action: () => void;
+    };
+    return [
+      hasPermission(comment.permissions, "CAN_EDIT") && {
+        label: "Edit",
+        icon: MdEdit,
+        action: () => {
+          toast.error("Fitur edit komentar belum tersedia");
+        },
+      },
+      hasPermission(comment.permissions, "CAN_DELETE") && {
+        label: "Hapus",
+        icon: FaRegTrashCan,
+        action: () => {
+          toast.error("Fitur hapus komentar belum tersedia");
+        },
+      },
+      hasPermission(comment.permissions, "CAN_REPORT") && {
+        label: "Laporkan",
+        icon: FaFlag,
+        action: () => {
+          toast.error("Fitur lapor komentar belum tersedia");
+        },
+      },
+    ].filter(Boolean) as OptionType[];
+  }, [comment.permissions]);
+
   return (
-    <li className="flex gap-2">
-      <Avatar className="size-8">
-        <AvatarImage
-          src={
-            comment.user.image ||
-            "https://ui-avatars.com/api/?name=M&background=2c2c2c&color=ffff"
-          }
-        />
-        <AvatarFallback>
-          {comment.user.name?.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex w-full flex-col">
-        <div className="flex w-max items-center gap-1">
-          <span className="font-bold">{comment.user.name}</span>
-          {comment.isOwner && (
-            <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 shadow-sm">
-              Penulis
-            </span>
-          )}
-          <span className="text-xs font-medium text-muted-foreground">
-            • &nbsp;
-            {formatDistanceToNow(comment.createdAt, {
-              addSuffix: true,
-              locale: id,
-              includeSeconds: true,
-            }).replace(/^\s*\D*?(\d+.*)/, "$1")}
-          </span>
-        </div>
-
-        <p className="text-sm">{comment.content}</p>
-
-        <button
-          className="text-left text-xs font-semibold"
-          onClick={() => {
-            if (status === "unauthenticated") {
-              router.replace("/auth/login");
-              return;
+    <li className="flex flex-col gap-2">
+      <div className="flex w-full min-w-0">
+        <Avatar className="size-8 shrink-0">
+          <AvatarImage
+            src={
+              comment.user.image ||
+              "https://ui-avatars.com/api/?name=M&background=2c2c2c&color=ffff"
             }
-            setParentCommentId(comment.commentId);
-            setIsReplyFormOpen((prev) => !prev);
-          }}
-        >
-          Balas
-        </button>
-
-        {isReplyFormOpen && (
-          <ReplyForm
-            onSubmit={handleReplySubmit}
-            onCancel={() => setIsReplyFormOpen(false)}
-            replyToUsername={comment.user.username}
           />
-        )}
+          <AvatarFallback>
+            {comment.user.name?.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="ml-2 flex w-full min-w-0 flex-col">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
+            <span
+              className={cn(
+                "max-w-[120px] truncate font-bold sm:max-w-none",
+                comment.isOwner &&
+                  "rounded-lg border bg-[#24232388] px-2 py-0.5 text-xs font-medium text-background",
+              )}
+            >
+              {comment.user.name}
+            </span>
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              • &nbsp;
+              {formatDistanceToNow(comment.createdAt, {
+                addSuffix: true,
+                locale: id,
+                includeSeconds: true,
+              }).replace(/^\s*\D*?(\d+.*)/, "$1")}{" "}
+              {comment.isEdited && " (diedit)"}
+            </span>
+          </div>
 
-        {hasReplies && (
-          <CommentReplyButton
-            toggleReplies={toggleReplies}
-            countReplies={comment.countReplies}
-          />
-        )}
+          <p className="break-words text-sm">{comment.content}</p>
 
-        <CommentReplyList />
+          <button
+            className="text-left text-xs font-semibold"
+            onClick={() => {
+              if (status === "unauthenticated") {
+                router.replace("/auth/login");
+                return;
+              }
+              setParentCommentId(comment.commentId);
+              setIsReplyFormOpen((prev) => !prev);
+            }}
+          >
+            Balas
+          </button>
+
+          {isReplyFormOpen && (
+            <ReplyForm
+              onSubmit={handleReplySubmit}
+              onCancel={() => setIsReplyFormOpen(false)}
+              replyToUsername={comment.user.username}
+            />
+          )}
+
+          {hasReplies && (
+            <CommentReplyButton
+              toggleReplies={toggleReplies}
+              countReplies={comment.countReplies}
+            />
+          )}
+        </div>
+        {status === "authenticated" && (
+          <div className="mx-auto shrink-0">
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="[&_svg]:size-5">
+                  <IoMdMore />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {options.map(({ action, icon: Icon, label }, index) => (
+                  <DropdownMenuItem key={index} className="px-2.5 py-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-0 [&_svg]:size-5"
+                      onClick={() => {
+                        action();
+                      }}
+                    >
+                      <Icon />
+                      <span className="ms-2">{label}</span>
+                    </Button>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
+      <CommentReplyList />
     </li>
   );
 };
@@ -302,80 +363,149 @@ const CommentReplyList = () => {
     [status, router, mutationReply, answerId, parentCommentId],
   );
 
+  // Memoize options per reply to avoid re-creating on every render
+  const getReplyOptions = useCallback((reply: any) => {
+    return [
+      hasPermission(reply.permissions, "CAN_EDIT") && {
+        label: "Edit",
+        icon: MdEdit,
+        action: () => {
+          toast.error("Fitur edit komentar belum tersedia");
+        },
+      },
+      hasPermission(reply.permissions, "CAN_DELETE") && {
+        label: "Hapus",
+        icon: FaRegTrashCan,
+        action: () => {
+          toast.error("Fitur hapus komentar belum tersedia");
+        },
+      },
+      hasPermission(reply.permissions, "CAN_REPORT") && {
+        label: "Laporkan",
+        icon: FaFlag,
+        action: () => {
+          toast.error("Fitur lapor komentar belum tersedia");
+        },
+      },
+    ].filter(Boolean) as {
+      label: string;
+      icon: React.ElementType;
+      action: () => void;
+    }[];
+  }, []);
+
   if (isLoading) {
     return <Loader />;
   }
 
   return (
     <ul className="ml-4 mt-2 space-y-4">
-      {replies.map((reply, i) => (
-        <li key={reply.commentId + i} className="flex gap-2">
-          <Avatar className="size-8">
-            <AvatarImage
-              src={
-                reply.user.image ||
-                "https://ui-avatars.com/api/?name=M&background=2c2c2c&color=ffff"
-              }
-            />
-            <AvatarFallback>&nbsp;</AvatarFallback>
-          </Avatar>
-          <div className="flex w-full flex-col">
-            <div className="flex w-max items-center gap-1">
-              <span className="font-bold">{reply.user.name}</span>
-              {reply.isOwner && (
-                <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 shadow-sm">
-                  Penulis
-                </span>
-              )}
-              <span className="text-xs font-medium text-muted-foreground">
-                • &nbsp;
-                {formatDistanceToNow(reply.createdAt, {
-                  addSuffix: true,
-                  locale: id,
-                  includeSeconds: true,
-                }).replace(/^\s*\D*?(\d+.*)/, "$1")}
-              </span>
-            </div>
-            <p className="text-sm">
-              {reply.replyingTo && (
-                <Link
-                  prefetch={false}
-                  target="_blank"
-                  href={`/@${reply.replyingTo.username}`}
-                >
-                  <span className="mr-1 text-primary">
-                    @{reply.replyingTo.username}
-                  </span>
-                </Link>
-              )}
-              {reply.content}
-            </p>
-            <button
-              className="text-left text-xs font-semibold"
-              onClick={() => {
-                if (status === "unauthenticated") {
-                  router.replace("/auth/login");
-                  return;
+      {replies.map((reply, i) => {
+        const options = getReplyOptions(reply);
+
+        return (
+          <li key={reply.commentId + i} className="flex w-full min-w-0">
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage
+                src={
+                  reply.user.image ||
+                  "https://ui-avatars.com/api/?name=M&background=2c2c2c&color=ffff"
                 }
-                setActiveReplyId(
-                  activeReplyId === reply.commentId ? null : reply.commentId,
-                );
-              }}
-            >
-              Balas
-            </button>
-            {activeReplyId === reply.commentId && (
-              <ReplyForm
-                onSubmit={(content) =>
-                  handleReplyToReply(reply.commentId, content)
-                }
-                onCancel={() => setActiveReplyId(null)}
-                replyToUsername={reply.user.username}
               />
+              <AvatarFallback>&nbsp;</AvatarFallback>
+            </Avatar>
+            <div className="ml-2 flex w-full min-w-0 flex-col">
+              <div className="flex min-w-0 flex-wrap items-center gap-1">
+                <span
+                  className={cn(
+                    "max-w-[120px] truncate font-bold sm:max-w-none",
+                    reply.isOwner &&
+                      "rounded-lg border bg-[#24232388] px-2 py-0.5 text-xs font-medium text-background",
+                  )}
+                >
+                  {reply.user.name}
+                </span>
+
+                <span className="truncate text-xs font-medium text-muted-foreground">
+                  • &nbsp;
+                  {formatDistanceToNow(reply.createdAt, {
+                    addSuffix: true,
+                    locale: id,
+                    includeSeconds: true,
+                  }).replace(/^\s*\D*?(\d+.*)/, "$1")}
+                  {reply.isEdited && " (diedit)"}
+                </span>
+              </div>
+              <p className="break-words text-sm">
+                {reply.replyingTo && (
+                  <Link
+                    prefetch={false}
+                    target="_blank"
+                    href={`/@${reply.replyingTo.username}`}
+                  >
+                    <span className="mr-1 text-primary">
+                      @{reply.replyingTo.username}
+                    </span>
+                  </Link>
+                )}
+                {reply.content}
+              </p>
+              <button
+                className="text-left text-xs font-semibold"
+                onClick={() => {
+                  if (status === "unauthenticated") {
+                    router.replace("/auth/login");
+                    return;
+                  }
+                  setActiveReplyId(
+                    activeReplyId === reply.commentId ? null : reply.commentId,
+                  );
+                }}
+              >
+                Balas
+              </button>
+              {activeReplyId === reply.commentId && (
+                <ReplyForm
+                  onSubmit={(content) =>
+                    handleReplyToReply(reply.commentId, content)
+                  }
+                  onCancel={() => setActiveReplyId(null)}
+                  replyToUsername={reply.user.username}
+                />
+              )}
+            </div>
+            {status === "authenticated" && (
+              <div className="mx-auto shrink-0">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="[&_svg]:size-5"
+                    >
+                      <IoMdMore />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {options.map(({ action, icon: Icon, label }, index) => (
+                      <DropdownMenuItem key={index} className="px-2.5 py-1">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start p-0 [&_svg]:size-5"
+                          onClick={action}
+                        >
+                          <Icon />
+                          <span className="ms-2">{label}</span>
+                        </Button>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
       <InfiniteScroll
         fetchNextPage={query.fetchNextPage}
         hasNextPage={query.hasNextPage}

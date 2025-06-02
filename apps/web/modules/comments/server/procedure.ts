@@ -9,6 +9,7 @@ import {
 } from "@/trpc/init";
 import { config } from "@/config";
 import logger from "@/lib/logger";
+import { getCommentPermissions } from "./utils";
 
 export const commentsRoute = createTRPCRouter({
   getTopLevelCommentsByAnswerId: dynamicProcedure
@@ -24,7 +25,7 @@ export const commentsRoute = createTRPCRouter({
         sort: z.enum(["asc", "desc"]).default("desc"),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { answerId, cursor, limit, sort } = input;
       logger.info(`Fetching top-level comments for answerId: ${answerId}`);
       try {
@@ -100,8 +101,13 @@ export const commentsRoute = createTRPCRouter({
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,
           countReplies: comment._count.childComments,
-          isEdited: comment.createdAt !== comment.updatedAt,
+          isEdited: comment.isEdited,
           isOwner: comment.user.id === comment.answer.user.id,
+          permissions: getCommentPermissions({
+            commentUserId: comment.user.id,
+            contentOwnerId: comment.answer.user.id,
+            currentUserId: ctx.session?.user.id,
+          }),
         }));
 
         logger.info(
@@ -133,7 +139,7 @@ export const commentsRoute = createTRPCRouter({
           .optional(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { parentCommentId, cursor } = input;
       const LIMIT = config.replies.defaultLimit;
       logger.info(`Fetching replies for parentCommentId: ${parentCommentId}`);
@@ -201,8 +207,13 @@ export const commentsRoute = createTRPCRouter({
           replyingTo: {
             username: reply.replyToComment?.user.username,
           },
-          isEdited: reply.createdAt !== reply.updatedAt,
+          isEdited: reply.isEdited,
           isOwner: reply.user.id === reply.answer.user.id,
+          permissions: getCommentPermissions({
+            commentUserId: reply.user.id,
+            contentOwnerId: reply.answer.user.id,
+            currentUserId: ctx.session?.user.id,
+          }),
         }));
 
         logger.info(
@@ -282,7 +293,7 @@ export const commentsRoute = createTRPCRouter({
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,
           countReplies: comment._count.childComments,
-          isEdited: comment.createdAt !== comment.updatedAt,
+          isEdited: comment.isEdited,
           isOwner: comment.user.id === comment.answer.user.id,
         };
 
@@ -387,7 +398,7 @@ export const commentsRoute = createTRPCRouter({
           content: reply.content,
           createdAt: reply.createdAt,
           updatedAt: reply.updatedAt,
-          isEdited: reply.createdAt !== reply.updatedAt,
+          isEdited: reply.isEdited,
           isOwner: reply.user.id === reply.answer.user.id,
           replyingTo: {
             username: reply.replyToComment?.user.username,
