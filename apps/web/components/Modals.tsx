@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { UserVoteListModal } from "@/modules/votes/ui/components/UserVoteListModal";
 import { EditQuestionModal } from "@/modules/questions/ui/components/EditQuestionModal";
+import { EditCommentModal } from "@/modules/comments/ui/components/EditCommentModal";
 
 export const Modals = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -20,6 +21,7 @@ export const Modals = () => {
     <>
       <UserVoteListModal />
       <EditQuestionModal />
+      <EditCommentModal />
     </>
   );
 };

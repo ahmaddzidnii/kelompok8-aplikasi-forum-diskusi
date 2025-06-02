@@ -9,6 +9,7 @@ import { FaChevronDown, FaChevronUp, FaFlag } from "react-icons/fa";
 import { IoMdMore } from "react-icons/io";
 import { MdEdit } from "react-icons/md";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { useConfirm } from "@omit/react-confirm-dialog";
 
 import { AutosizeTextarea } from "@/components/ui/textarea-auto-size";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -31,6 +32,8 @@ import { ReplyProvider } from "@/modules/comments/context/ReplyContext";
 import { hasPermission } from "../../server/utils";
 import { Comment as CommentType } from "../../context/CommentContext";
 import { cn } from "@/lib/utils";
+import { useDeleteCommentMutation } from "../../hooks/useDeleteCommentMutation";
+import { useEditCommentModal } from "../../hooks/useEditCommentModal";
 
 export const CommentList = () => {
   const { comments, query } = useComment();
@@ -64,6 +67,9 @@ const Comment = ({ comment }: { comment: CommentType }) => {
     useReplies();
   const { answerId } = useComment();
   const mutationReply = useReplyMutation();
+  const deleteCommentMutation = useDeleteCommentMutation();
+  const confirm = useConfirm();
+  const { openModal } = useEditCommentModal();
 
   const toggleReplies = useCallback(() => {
     if (isOpen) {
@@ -110,14 +116,32 @@ const Comment = ({ comment }: { comment: CommentType }) => {
         label: "Edit",
         icon: MdEdit,
         action: () => {
-          toast.error("Fitur edit komentar belum tersedia");
+          openModal(comment.commentId);
         },
       },
       hasPermission(comment.permissions, "CAN_DELETE") && {
         label: "Hapus",
         icon: FaRegTrashCan,
-        action: () => {
-          toast.error("Fitur hapus komentar belum tersedia");
+        action: async () => {
+          const isConfirmed = await confirm({
+            title: "Hapus Komentar",
+            description: "Apakah Anda yakin ingin menghapus komentar ini?",
+            confirmText: "Hapus",
+            cancelText: "Batal",
+          });
+
+          if (!isConfirmed) return;
+
+          toast.promise(
+            deleteCommentMutation.mutateAsync({
+              commentId: comment.commentId,
+            }),
+            {
+              success: "Komentar berhasil dihapus",
+              error: "Gagal menghapus komentar",
+              pending: "Menghapus komentar...",
+            },
+          );
         },
       },
       hasPermission(comment.permissions, "CAN_REPORT") && {
@@ -338,6 +362,9 @@ const CommentReplyList = () => {
   const { status } = useSession();
   const { answerId } = useComment();
   const mutationReply = useReplyMutation();
+  const deleteCommentMutation = useDeleteCommentMutation();
+  const confirm = useConfirm();
+  const { openModal } = useEditCommentModal();
 
   const handleReplyToReply = useCallback(
     (replyId: string, content: string) => {
@@ -363,21 +390,37 @@ const CommentReplyList = () => {
     [status, router, mutationReply, answerId, parentCommentId],
   );
 
-  // Memoize options per reply to avoid re-creating on every render
   const getReplyOptions = useCallback((reply: any) => {
     return [
       hasPermission(reply.permissions, "CAN_EDIT") && {
         label: "Edit",
         icon: MdEdit,
         action: () => {
-          toast.error("Fitur edit komentar belum tersedia");
+          openModal(reply.commentId);
         },
       },
       hasPermission(reply.permissions, "CAN_DELETE") && {
         label: "Hapus",
         icon: FaRegTrashCan,
-        action: () => {
-          toast.error("Fitur hapus komentar belum tersedia");
+        action: async () => {
+          const isConfirmed = await confirm({
+            title: "Hapus Balasan",
+            description: "Apakah Anda yakin ingin menghapus balasan ini?",
+            confirmText: "Hapus",
+            cancelText: "Batal",
+          });
+          if (!isConfirmed) return;
+
+          toast.promise(
+            deleteCommentMutation.mutateAsync({
+              commentId: reply.commentId,
+            }),
+            {
+              success: "Balasan berhasil dihapus",
+              error: "Gagal menghapus balasan",
+              pending: "Menghapus balasan...",
+            },
+          );
         },
       },
       hasPermission(reply.permissions, "CAN_REPORT") && {

@@ -11,8 +11,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useDeleteQuestionMutation } from "../../hooks/useDeleteQuestionMutation";
-import { useConfirm } from "@/hooks/useConfirm";
 import { useEditQuestionModal } from "../../hooks/useEditQuestionModal";
+
+import { useConfirm } from "@omit/react-confirm-dialog";
 
 interface QuestionCardDropdownActionProps {
   slug: string;
@@ -26,47 +27,46 @@ export const QuestionCardDropdownAction = ({
     slug,
   });
 
-  const [ConfirmDialog, confirm] = useConfirm(
-    "Hapus Pertanyaan",
-    "Apakah Anda yakin ingin menghapus pertanyaan ini?",
-  );
+  const confirm = useConfirm();
 
   const handleEdit = () => {
     open(slug);
   };
 
   const handleDelete = async () => {
-    const ok = await confirm();
+    const ok = await confirm({
+      title: "Hapus Pertanyaan",
+      description: "Apakah Anda yakin ingin menghapus pertanyaan ini?",
+      confirmText: "Hapus",
+      cancelText: "Batal",
+    });
     if (!ok) return;
 
     deleteQuestionMutation.mutate({ slug });
   };
   return (
-    <>
-      <ConfirmDialog />
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="[&_svg]:size-6">
-            <IoMdMore />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem
-            role="button"
-            className="cursor-pointer"
-            onClick={handleEdit}
-          >
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            role="button"
-            className="cursor-pointer"
-            onClick={handleDelete}
-          >
-            Hapus
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="[&_svg]:size-6">
+          <IoMdMore />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem
+          role="button"
+          className="cursor-pointer"
+          onClick={handleEdit}
+        >
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          role="button"
+          className="cursor-pointer"
+          onClick={handleDelete}
+        >
+          Hapus
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
