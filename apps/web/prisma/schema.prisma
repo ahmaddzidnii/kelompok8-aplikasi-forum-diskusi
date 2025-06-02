@@ -72,6 +72,7 @@ model User {
   savedAnswers  SavedAnswer[]
   upvotesAnswer UpvoteAnswer[]
   comments      Comment[]
+  images        Image[]   @relation("UserImages")
 
   @@map("users")
 }
@@ -127,6 +128,7 @@ model Answer {
   savedAnswers SavedAnswer[]
   upvotesAnswer UpvoteAnswer[]
   comments     Comment[]
+  images       Image[]  @relation("AnswerImages")
 
   @@map("answers")
   @@unique([questionId, userId])
@@ -175,4 +177,39 @@ model Comment {
   childComments     Comment[] @relation("ParentComment")
 
   @@map("comments")
+}
+
+enum ImageType {
+  AVATAR
+  ATTACHMENT
+}
+
+enum OwnerType {
+  USER
+  ANSWER
+}
+
+model Image {
+  imageId       String    @id @default(ulid()) @map("image_id")
+  url           String
+  key           String
+  type          ImageType
+  
+  // Foreign keys - bisa null untuk temporary storage
+  userId        String?   @map("user_id")      // untuk avatar user atau temporary owner
+  answerId      String?   @map("answer_id")    // untuk gambar answer (setelah submit)
+  
+  // Status tracking
+  isUsed        Boolean   @default(false) @map("is_used")
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  createdBy    String?   @map("created_by")
+
+  // Relations
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull, name: "UserImages")
+  answer        Answer?   @relation(fields: [answerId], references: [answerId], onDelete: SetNull, name: "AnswerImages")
+
+  @@map("images")
 }

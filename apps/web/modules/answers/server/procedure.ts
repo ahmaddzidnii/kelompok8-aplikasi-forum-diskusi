@@ -12,6 +12,7 @@ import {
 import { answerSchema } from "../schema";
 import logger from "@/lib/logger";
 import { config } from "@/config";
+import { extractImageAttrsFromTiptapJSON } from "./utils";
 
 export const answersRouter = createTRPCRouter({
   createAnswer: protectedProcedure
@@ -48,12 +49,49 @@ export const answersRouter = createTRPCRouter({
           });
         }
 
-        // 3. Buat jawaban
+        const contentJson = JSON.parse(content);
+        const images = extractImageAttrsFromTiptapJSON(contentJson);
+
+        logger.debug(
+          `Extracted ${images.length} images from content for questionId=${questionId}`,
+        );
+
+        const existingImages = await prisma.image.findMany({
+          where: {
+            key: {
+              in: images.map((img) => img.id),
+            },
+          },
+          select: {
+            imageId: true,
+          },
+        });
+
+        logger.debug(
+          `Found ${existingImages.length} existing images for questionId=${questionId}`,
+        );
+
+        // Buat jawaban
         const answer = await prisma.answer.create({
           data: {
             userId: session?.user.id!,
             questionId,
-            content: JSON.parse(content),
+            content: contentJson,
+            images: {
+              connect: existingImages,
+            },
+          },
+        });
+
+        // update image dengan isUsed true
+        await prisma.image.updateMany({
+          where: {
+            key: {
+              in: images.map((img) => img.id),
+            },
+          },
+          data: {
+            isUsed: true,
           },
         });
 

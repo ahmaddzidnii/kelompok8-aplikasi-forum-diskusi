@@ -65,7 +65,9 @@ async function uploadToCustomS3(
     }),
   );
 
-  return `https://is3.cloudhost.id/forumdiskusi/forumdiskusi/${key}`;
+  const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
+
+  return `https://is3.cloudhost.id/${BUCKET_NAME}/${BUCKET_NAME}/${key}`;
 }
 
 export { getFullHDGoogleAvatar, uploadToCustomS3 };

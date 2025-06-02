@@ -1,7 +1,7 @@
 import { type Role } from "@prisma/client";
 import Github from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth, { DefaultSession, User } from "next-auth";
 
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { generateFromEmail } from "unique-username-generator";
@@ -85,23 +85,63 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   events: {
     async signIn(message) {
-      if (message.isNewUser) {
-        const imageUrl = message.user.image;
+      if (message.isNewUser && message.user.email) {
+        await handleUpdateToInitialProfile(message.user);
+      }
 
-        const image = await uploadToCustomS3(
-          imageUrl!,
-          `profile/${message.user.id}.jpg`,
-        );
-
-        await prisma.user.update({
-          where: { id: message.user.id },
-          data: {
-            username: generateFromEmail(message.user.email!, 3),
-            organization: "Komunitas Forumdiskusi.",
-            image,
-          },
-        });
+      if (message.isNewUser && message.user.image && message.user.id) {
+        await handleAvatarUpload(message.user, message.user.image!);
       }
     },
   },
 });
+
+const handleUpdateToInitialProfile = async (user: User): Promise<void> => {
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      username: generateFromEmail(user.email || "ahmad@gmail.com", 3),
+      organization: "Komunitas Forumdiskusi.",
+    },
+  });
+};
+
+const handleAvatarUpload = async (
+  user: User,
+  imageUrl: string,
+): Promise<void> => {
+  const key = `profile/${user.id}.jpg`;
+  const image = await uploadToCustomS3(imageUrl!, key);
+
+  await prisma.$transaction(async (tx) => {
+    const { imageId } = await tx.image.create({
+      data: {
+        key,
+        url: image,
+        type: "AVATAR",
+      },
+      select: {
+        imageId: true,
+      },
+    });
+
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        image,
+        images: {
+          connect: {
+            imageId: imageId,
+          },
+        },
+      },
+    });
+
+    await tx.image.update({
+      where: { imageId },
+      data: {
+        isUsed: true,
+      },
+    });
+  });
+};
