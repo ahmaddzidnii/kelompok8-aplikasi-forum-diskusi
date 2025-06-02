@@ -6,9 +6,11 @@ import {
   createTRPCRouter,
   dynamicProcedure,
   protectedProcedure,
+  publicProcedure,
 } from "@/trpc/init";
 import { config } from "@/config";
 import logger from "@/lib/logger";
+import { getCommentPermissions, hasPermission } from "./utils";
 
 export const commentsRoute = createTRPCRouter({
   getTopLevelCommentsByAnswerId: dynamicProcedure
@@ -24,7 +26,7 @@ export const commentsRoute = createTRPCRouter({
         sort: z.enum(["asc", "desc"]).default("desc"),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { answerId, cursor, limit, sort } = input;
       logger.info(`Fetching top-level comments for answerId: ${answerId}`);
       try {
@@ -100,8 +102,13 @@ export const commentsRoute = createTRPCRouter({
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,
           countReplies: comment._count.childComments,
-          isEdited: comment.createdAt !== comment.updatedAt,
+          isEdited: comment.isEdited,
           isOwner: comment.user.id === comment.answer.user.id,
+          permissions: getCommentPermissions({
+            commentUserId: comment.user.id,
+            contentOwnerId: comment.answer.user.id,
+            currentUserId: ctx.session?.user.id,
+          }),
         }));
 
         logger.info(
@@ -133,7 +140,7 @@ export const commentsRoute = createTRPCRouter({
           .optional(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { parentCommentId, cursor } = input;
       const LIMIT = config.replies.defaultLimit;
       logger.info(`Fetching replies for parentCommentId: ${parentCommentId}`);
@@ -201,8 +208,13 @@ export const commentsRoute = createTRPCRouter({
           replyingTo: {
             username: reply.replyToComment?.user.username,
           },
-          isEdited: reply.createdAt !== reply.updatedAt,
+          isEdited: reply.isEdited,
           isOwner: reply.user.id === reply.answer.user.id,
+          permissions: getCommentPermissions({
+            commentUserId: reply.user.id,
+            contentOwnerId: reply.answer.user.id,
+            currentUserId: ctx.session?.user.id,
+          }),
         }));
 
         logger.info(
@@ -282,8 +294,13 @@ export const commentsRoute = createTRPCRouter({
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,
           countReplies: comment._count.childComments,
-          isEdited: comment.createdAt !== comment.updatedAt,
+          isEdited: comment.isEdited,
           isOwner: comment.user.id === comment.answer.user.id,
+          permissions: getCommentPermissions({
+            commentUserId: comment.user.id,
+            contentOwnerId: comment.answer.user.id,
+            currentUserId: userId,
+          }),
         };
 
         logger.info(
@@ -319,7 +336,6 @@ export const commentsRoute = createTRPCRouter({
       );
 
       try {
-        // First verify that the parent comment exists
         const parentComment = await prisma.comment.findUnique({
           where: { commentId: parentCommentId },
         });
@@ -387,7 +403,7 @@ export const commentsRoute = createTRPCRouter({
           content: reply.content,
           createdAt: reply.createdAt,
           updatedAt: reply.updatedAt,
-          isEdited: reply.createdAt !== reply.updatedAt,
+          isEdited: reply.isEdited,
           isOwner: reply.user.id === reply.answer.user.id,
           replyingTo: {
             username: reply.replyToComment?.user.username,
@@ -403,6 +419,208 @@ export const commentsRoute = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create reply",
+        });
+      }
+    }),
+
+  delete: protectedProcedure
+    .input(
+      z.object({
+        commentId: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { commentId } = input;
+      const userId = ctx.session?.user.id as string;
+
+      logger.info(`Deleting comment: commentId=${commentId}, userId=${userId}`);
+      try {
+        const comment = await prisma.comment.findUnique({
+          where: { commentId },
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!comment) {
+          logger.warn(`Comment not found: commentId=${commentId}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comment not found",
+          });
+        }
+
+        const permissions = await getCommentPermissions({
+          commentUserId: comment.userId,
+          contentOwnerId: comment.answer.user.id,
+          currentUserId: userId,
+        });
+
+        const allwowedToDelete = hasPermission(permissions, "CAN_DELETE");
+
+        if (!allwowedToDelete) {
+          logger.warn(
+            `User ${userId} does not have permission to delete comment: commentId=${commentId}`,
+          );
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to delete this comment",
+          });
+        }
+
+        await prisma.comment.delete({
+          where: { commentId },
+        });
+
+        logger.info(
+          `Comment deleted successfully: commentId=${commentId}, userId=${userId}`,
+        );
+        return { success: true, message: "Comment deleted successfully" };
+      } catch (error) {
+        logger.error(
+          `Error deleting comment: ${error instanceof Error ? error.message : String(error)} | commentId=${commentId}, userId=${userId}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete comment",
+        });
+      }
+    }),
+
+  edit: protectedProcedure
+    .input(
+      z.object({
+        commentId: z.string(),
+        content: z.string().min(1).max(config.comments.maxLength),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { commentId, content } = input;
+      const userId = ctx.session?.user.id as string;
+
+      logger.info(`Editing comment: commentId=${commentId}, userId=${userId}`);
+
+      try {
+        const comment = await prisma.comment.findUnique({
+          where: { commentId },
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!comment) {
+          logger.warn(`Comment not found: commentId=${commentId}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comment not found",
+          });
+        }
+
+        const permissions = await getCommentPermissions({
+          commentUserId: comment.userId,
+          contentOwnerId: comment.answer.user.id,
+          currentUserId: userId,
+        });
+
+        const allowedToEdit = hasPermission(permissions, "CAN_EDIT");
+
+        if (!allowedToEdit) {
+          logger.warn(
+            `User ${userId} does not have permission to edit comment: commentId=${commentId}`,
+          );
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to edit this comment",
+          });
+        }
+
+        const updatedComment = await prisma.comment.update({
+          where: { commentId },
+          data: {
+            content,
+            isEdited: true,
+          },
+          include: {
+            answer: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+          },
+        });
+
+        return updatedComment;
+      } catch (error) {
+        logger.error(
+          `Error editing comment: ${error instanceof Error ? error.message : String(error)} | commentId=${commentId}, userId=${userId}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to edit comment",
+        });
+      }
+    }),
+  getOne: publicProcedure
+    .input(
+      z.object({
+        commentId: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { commentId } = input;
+      logger.info(`Fetching comment: commentId=${commentId}`);
+      try {
+        const comment = await prisma.comment.findUnique({
+          where: { commentId },
+          select: {
+            content: true,
+          },
+        });
+
+        if (!comment) {
+          logger.warn(`Comment not found: commentId=${commentId}`);
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comment not found",
+          });
+        }
+
+        return comment;
+      } catch (error) {
+        logger.error(
+          `Error fetching comment: ${error instanceof Error ? error.message : String(error)} | commentId=${commentId}`,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch comment",
         });
       }
     }),

@@ -1,3 +1,8 @@
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE_SIZE = 10;
+export const MAX_PAGE_SIZE = 100;
+export const MIN_PAGE_SIZE = 1;
+
 export const config = {
   appName: process.env.NEXT_PUBLIC_APP_NAME ?? "MyApp",
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0",

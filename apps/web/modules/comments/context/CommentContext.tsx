@@ -6,26 +6,15 @@ import {
   ReactNode,
 } from "react";
 import { trpc } from "@/trpc/client";
+import { inferRouterOutputs } from "@trpc/server";
+import { AppRouter } from "@/trpc/routers/_app";
 
 type SortType = "asc" | "desc";
 
-type CommentUser = {
-  id: string;
-  name: string | null;
-  username: string | null;
-  image: string | null;
-};
+type RouterOutput = inferRouterOutputs<AppRouter>;
 
-type Comment = {
-  commentId: string;
-  user: CommentUser;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  countReplies: number;
-  isEdited: boolean;
-  isOwner: boolean;
-};
+export type Comment =
+  RouterOutput["comments"]["getTopLevelCommentsByAnswerId"]["items"][0];
 
 type CommentQuery = {
   hasNextPage: boolean;

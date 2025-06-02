@@ -1,25 +1,31 @@
 import React, { createContext, useState, useMemo, useCallback } from "react";
 import { trpc } from "@/trpc/client";
+import { inferRouterOutputs } from "@trpc/server";
+import { AppRouter } from "@/trpc/routers/_app";
 
-interface ReplyUser {
-  id: string;
-  name: string | null;
-  username: string | null;
-  image: string | null;
-}
+// interface ReplyUser {
+//   id: string;
+//   name: string | null;
+//   username: string | null;
+//   image: string | null;
+// }
 
-interface ReplyItem {
-  commentId: string;
-  user: ReplyUser;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  replyingTo: {
-    username: string | null | undefined;
-  };
-  isEdited: boolean;
-  isOwner: boolean;
-}
+type RouterOutput = inferRouterOutputs<AppRouter>;
+
+export type Reply =
+  RouterOutput["comments"]["getRepliesByParentCommentId"]["items"][0];
+// interface ReplyItem {
+//   commentId: string;
+//   user: ReplyUser;
+//   content: string;
+//   createdAt: Date;
+//   updatedAt: Date;
+//   replyingTo: {
+//     username: string | null | undefined;
+//   };
+//   isEdited: boolean;
+//   isOwner: boolean;
+// }
 
 interface ReplyQuery {
   hasNextPage: boolean;
@@ -34,7 +40,7 @@ interface ReplyContextType {
   open: (commentId: string) => void;
   close: () => void;
   isLoading?: boolean;
-  replies: ReplyItem[];
+  replies: Reply[];
   query: ReplyQuery;
 }
 

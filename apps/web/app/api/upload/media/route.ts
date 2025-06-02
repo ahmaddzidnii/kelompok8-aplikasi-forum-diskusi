@@ -3,19 +3,27 @@ import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/s3";
 import { auth } from "@/auth";
 import { nanoid } from "@/lib/nanoid";
+import { prisma } from "@/lib/prisma";
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
-// Handle upload media
+/*
+LOGIC:
+- isUsed = false → temporary (belum digunakan dalam answer final)
+- isUsed = true  → permanent (sudah digunakan dalam answer final)
+
+FLOW:
+1. Upload: isUsed = false, sessionId = user_session
+2. Submit: isUsed = true, answerId = new_answer_id
+3. Cleanup: delete where isUsed = false AND createdAt < threshold
+*/
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
 
     if (!session) {
-      return NextResponse.json(
-        { message: "Unauthorized", data: null },
-        { status: 401 },
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -46,11 +54,24 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    const fileUrl = `${process.env.S3_BUCKET_URL}/forumdiskusi/${fileName}`;
+    const url = `${process.env.S3_BUCKET_URL}/${process.env.S3_BUCKET_NAME}/${fileName}`;
+    const key = fileName;
+
+    // save ke database untuk tracking file
+
+    await prisma.image.create({
+      data: {
+        key,
+        url,
+        isUsed: false,
+        createdBy: session.user.id,
+        type: "ATTACHMENT",
+      },
+    });
 
     return NextResponse.json({
       message: "File uploaded successfully",
-      data: { url: fileUrl, key: fileName },
+      data: { url, key },
     });
   } catch (error) {
     return NextResponse.json(
