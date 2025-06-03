@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { SectionOne } from "@/components/minimal-tiptap/components/section/one";
 import { SectionTwo } from "@/components/minimal-tiptap/components/section/two";
-import { SectionThree } from "@/components/minimal-tiptap/components/section/three";
+// import { SectionThree } from "@/components/minimal-tiptap/components/section/three";
 import { SectionFour } from "@/components/minimal-tiptap/components/section/four";
 import { SectionFive } from "@/components/minimal-tiptap/components/section/five";
 import { LinkBubbleMenu } from "@/components/minimal-tiptap/components/bubble-menu/link-bubble-menu";
