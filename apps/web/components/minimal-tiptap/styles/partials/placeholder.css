@@ -1,4 +1,16 @@
-.minimal-tiptap-editor .ProseMirror > p.is-editor-empty::before {
+/* .minimal-tiptap-editor .ProseMirror > p.is-editor-empty::before {
   content: attr(data-placeholder);
-  @apply pointer-events-none float-left h-0 text-[var(--mt-secondary)];
+  @apply pointer-events-none absolute left-0 top-0 w-full text-start text-[var(--mt-secondary)];
+} */
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--mt-secondary);
+  content: attr(data-placeholder);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  pointer-events: none;
+  opacity: 0.8;
+  text-align: start;
 }

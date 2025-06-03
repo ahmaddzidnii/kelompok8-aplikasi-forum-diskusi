@@ -1,63 +1,63 @@
-import * as React from "react"
-import type { Editor } from "@tiptap/react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import * as React from "react";
+import type { Editor } from "@tiptap/react";
+import { Button } from "@/components/ui/button";
+// import { Label } from "@/components/ui/label";
+// import { Input } from "@/components/ui/input";
 
 interface ImageEditBlockProps {
-  editor: Editor
-  close: () => void
+  editor: Editor;
+  close: () => void;
 }
 
 export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
   editor,
   close,
 }) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const [link, setLink] = React.useState("")
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // const [link, setLink] = React.useState("");
 
   const handleClick = React.useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
+    fileInputRef.current?.click();
+  }, []);
 
   const handleFile = React.useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files?.length) return
+      const files = e.target.files;
+      if (!files?.length) return;
 
       const insertImages = async () => {
-        const contentBucket = []
-        const filesArray = Array.from(files)
+        const contentBucket = [];
+        const filesArray = Array.from(files);
 
         for (const file of filesArray) {
-          contentBucket.push({ src: file })
+          contentBucket.push({ src: file });
         }
 
-        editor.commands.setImages(contentBucket)
-      }
+        editor.commands.setImages(contentBucket);
+      };
 
-      await insertImages()
-      close()
+      await insertImages();
+      close();
     },
-    [editor, close]
-  )
+    [editor, close],
+  );
 
-  const handleSubmit = React.useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
+  // const handleSubmit = React.useCallback(
+  //   (e: React.FormEvent<HTMLFormElement>) => {
+  //     e.preventDefault();
+  //     e.stopPropagation();
 
-      if (link) {
-        editor.commands.setImages([{ src: link }])
-        close()
-      }
-    },
-    [editor, link, close]
-  )
+  //     if (link) {
+  //       editor.commands.setImages([{ src: link }]);
+  //       close();
+  //     }
+  //   },
+  //   [editor, link, close],
+  // );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-1">
+    <form onSubmit={() => {}} className="space-y-6">
+      {/* <div className="space-y-1">
         <Label htmlFor="image-link">Attach an image link</Label>
         <div className="flex">
           <Input
@@ -75,7 +75,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
             Submit
           </Button>
         </div>
-      </div>
+      </div> */}
       <Button type="button" className="w-full" onClick={handleClick}>
         Upload from your computer
       </Button>
@@ -88,7 +88,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
         onChange={handleFile}
       />
     </form>
-  )
-}
+  );
+};
 
-export default ImageEditBlock
+export default ImageEditBlock;
