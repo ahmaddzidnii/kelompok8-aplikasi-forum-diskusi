@@ -28,8 +28,9 @@ import { useAnswerModalStore } from "@/modules/questions/ui/store/useAnswerModal
 import { UserMeta } from "./UserMeta";
 import { trpc } from "@/trpc/client";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { MinimalTiptapEditor } from "@/components/minimal-tiptap";
+// import { MinimalTiptapEditor } from "@/components/minimal-tiptap";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import MinimalTiptapThree from "@/components/minimal-tiptap/minimal-tiptap-three";
 
 export const AnswerModalForm = () => {
   const { data, status } = useSession();
@@ -104,10 +105,11 @@ export const AnswerModalForm = () => {
     <ResponsiveModal open={isOpen} onOpenChange={handleClose}>
       <ResponsiveModalContent
         side="bottom"
-        className="w-full lg:h-[900px]"
+        className="flex h-[900px] w-full flex-col"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <ResponsiveModalHeader className="h-full">
+        {/* Sticky Header */}
+        <ResponsiveModalHeader className="sticky top-0 z-10 flex-shrink-0 bg-background pb-4">
           <UserMeta
             avatar={data?.user?.image || "/avatar.png"}
             name={data?.user?.name || "Ahmad Zidni Hidayat"}
@@ -117,58 +119,74 @@ export const AnswerModalForm = () => {
             withBio={false}
           />
 
-          <div className="flex flex-1 flex-col gap-2">
-            <p className="text-start text-lg font-semibold text-foreground">
-              {questionContent || "Judul Pertanyaan"}
-            </p>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="h-96"
-                id="answer-form"
-              >
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem className="h-full">
-                      <FormControl>
-                        <TooltipProvider>
-                          <MinimalTiptapEditor
-                            placeholder="Tulis jawaban anda.."
-                            className="h-full w-full overflow-hidden focus-within:border-foreground"
-                            editorContentClassName="p-5 flex-1 overflow-y-auto max-h-[calc(100vh-200px)]"
-                            immediatelyRender={false}
-                            output="json"
-                            autofocus={true}
-                            editable={true}
-                            editorClassName="focus:outline-none"
-                            onChange={(value) => {
-                              field.onChange(JSON.stringify(value));
-                            }}
-                            value={field.value}
-                          />
-                        </TooltipProvider>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-
-            <LoadingButton
-              loading={isPending}
-              disabled={!form.formState.isValid}
-              type="submit"
-              form="answer-form"
-              className="ms-auto"
-            >
-              Kirimkan
-            </LoadingButton>
-          </div>
+          <p className="mt-4 text-start text-lg font-semibold text-foreground">
+            {questionContent || "Judul Pertanyaan"}
+          </p>
         </ResponsiveModalHeader>
+
+        {/* Content Area */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 px-0">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex min-h-0 flex-1 flex-col gap-4"
+              id="answer-form"
+            >
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem className="flex min-h-0 flex-1 flex-col">
+                    <FormControl>
+                      <TooltipProvider>
+                        {/* <MinimalTiptapEditor
+                          placeholder="Tulis jawaban anda.."
+                          className="h-full w-full overflow-hidden focus-within:border-foreground"
+                          editorContentClassName="p-5 flex-1 overflow-y-auto max-h-[calc(100vh-200px)]"
+                          immediatelyRender={false}
+                          output="json"
+                          autofocus={true}
+                          editable={true}
+                          editorClassName="focus:outline-none"
+                          onChange={(value) => {
+                            field.onChange(JSON.stringify(value));
+                          }}
+                          value={field.value}
+                        /> */}
+                        <MinimalTiptapThree
+                          placeholder="Tulis jawaban anda.."
+                          editorClassName="flex-1 w-full  rounded-lg overflow-hidden"
+                          editorContentClassName="p-5 overflow-y-auto h-full"
+                          immediatelyRender={false}
+                          output="json"
+                          autofocus
+                          editable
+                          value={field.value}
+                          onChange={(value) => {
+                            console.log("onChange", value);
+                            field.onChange(JSON.stringify(value));
+                          }}
+                        />
+                      </TooltipProvider>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+
+          <LoadingButton
+            loading={isPending}
+            disabled={!form.formState.isValid}
+            type="submit"
+            form="answer-form"
+            className="ms-auto flex-shrink-0"
+          >
+            Kirimkan
+          </LoadingButton>
+        </div>
+
         <VisuallyHidden>
           <ResponsiveModalTitle className="sr-only">
             Form Jawaban
