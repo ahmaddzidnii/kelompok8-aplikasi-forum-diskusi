@@ -164,22 +164,26 @@ export const questionsRouter = createTRPCRouter({
           });
         }
 
-        const isAnswered = await prisma.answer.findFirst({
+        const userAnswer = await prisma.answer.findFirst({
           where: {
-            questionId: question?.questionId,
-            userId: session?.user.id,
+            AND: [
+              { questionId: question.questionId },
+              { userId: session?.user.id },
+            ],
           },
           select: {
             answerId: true,
+            user: true,
           },
         });
 
-        const hasAnswered = !!isAnswered;
+        const hasAnswered = session ? !!userAnswer : false;
         logger.info(`Question found. Has answered: ${hasAnswered}`);
 
         return {
           ...question,
           hasAnswered,
+          userAnswer,
         };
       } catch (error) {
         logger.error(

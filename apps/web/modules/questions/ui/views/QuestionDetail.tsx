@@ -9,6 +9,7 @@ import { ButtonAnswer } from "../components/ButtonAnswer";
 import { QuestionCard } from "../components/QuestionCard";
 import { ListsAnswerSection } from "../section/ListsAnswerSection";
 import { AnswerFilter } from "../components/AnswerFilter";
+import { CardInfoUserHasAnswers } from "../components/CardInfoUserHasAnswers";
 
 interface QuestionDetailProps {
   threadSlug: string;
@@ -80,6 +81,8 @@ export const QuestionDetail = async ({ threadSlug }: QuestionDetailProps) => {
             </CardContent>
           </Card>
         )}
+
+      {question.hasAnswered && <CardInfoUserHasAnswers question={question} />}
 
       <AnswerFilter />
 
