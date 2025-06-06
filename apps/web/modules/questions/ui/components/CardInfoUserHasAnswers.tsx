@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppRouter } from "@/trpc/routers/_app";
 import { trpc } from "@/trpc/client";
 import { useConfirm } from "@omit/react-confirm-dialog";
+import { useEditAnswerModal } from "@/modules/answers/ui/hooks/useEditAnswerModal";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
@@ -23,6 +24,8 @@ export const CardInfoUserHasAnswers = ({
 }: CardInfoUserHasAnswersProps) => {
   const router = useRouter();
   const confirm = useConfirm();
+  const { openEditModal } = useEditAnswerModal();
+
   const deleteAnswerMutation = trpc.answers.delete.useMutation({
     onSuccess: () => {
       toast.success("Jawaban Anda berhasil dihapus.");
@@ -34,9 +37,11 @@ export const CardInfoUserHasAnswers = ({
   });
   const handleEditAnswer = () => {
     if (typeof window == "undefined") return;
-    toast.info(
-      `Fitur edit jawaban belum tersedia.,${question.userAnswer?.answerId}`,
-    );
+    openEditModal({
+      answerId: question.userAnswer?.answerId || "",
+      answerContent: question.userAnswer?.content || "",
+      questionContent: question.content || "",
+    });
   };
 
   const handleDeleteAnswer = async () => {
@@ -87,7 +92,6 @@ export const CardInfoUserHasAnswers = ({
             <div className="flex gap-2">
               <LoadingButton
                 variant="outline"
-                loading={false}
                 size="sm"
                 onClick={handleEditAnswer}
               >
