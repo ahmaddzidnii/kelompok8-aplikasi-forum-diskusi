@@ -6,6 +6,16 @@ html {
   scroll-behavior: smooth !important;
 }
 
+.hide-scrollbar {
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

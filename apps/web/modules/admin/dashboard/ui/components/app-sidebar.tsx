@@ -49,7 +49,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar collapsible="none" className="h-auto border-r" {...props}>
+    <Sidebar
+      collapsible="none"
+      className="h-auto border-r"
+      style={{
+        zIndex: 20,
+      }}
+      {...props}
+    >
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>

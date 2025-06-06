@@ -23,14 +23,14 @@ import { formatDate } from "../utils";
 interface ReportDetailProps {
   report: Report;
   onResolve: (id: number, action: string) => void;
-  onHide: (id: number) => void;
+  // onHide: (id: number) => void;
   onDelete: (id: number) => void;
 }
 
 export default function ReportDetail({
   report,
   onResolve,
-  onHide,
+  // onHide,
   onDelete,
 }: ReportDetailProps) {
   const contentTypeIcons = {
@@ -196,14 +196,14 @@ export default function ReportDetail({
             <div>
               <h3 className="mb-2 text-sm font-medium">Aksi Konten</h3>
               <div className="space-y-2">
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() => onHide(report.id)}
                   disabled={report.isHidden || report.isDeleted}
                 >
                   Sembunyikan Konten
-                </Button>
+                </Button> */}
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-600"
