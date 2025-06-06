@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -24,31 +25,27 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useAnswerModalStore } from "@/modules/questions/ui/store/useAnswerModalStore";
-import { UserMeta } from "./UserMeta";
 import { trpc } from "@/trpc/client";
+import { UserMeta } from "@/modules/questions/ui/components/UserMeta";
 import { LoadingButton } from "@/components/ui/loading-button";
-// import { MinimalTiptapEditor } from "@/components/minimal-tiptap";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import MinimalTiptapThree from "@/components/minimal-tiptap/minimal-tiptap-three";
+import { useEditAnswerModal } from "../hooks/useEditAnswerModal";
 
-export const AnswerModalForm = () => {
+export const EditAnswerModal = () => {
   const { data, status } = useSession();
-  const { questionId, questionContent, isOpen, close } = useAnswerModalStore();
+  const { isOpen, questionContent, answerId, answerContent, closeEditModal } =
+    useEditAnswerModal();
   const router = useRouter();
-  const trpcUtils = trpc.useUtils();
 
-  const { mutate, isPending } = trpc.answers.createAnswer.useMutation({
-    onSuccess: ({ questionSlug }) => {
-      trpcUtils.answers.getMany.invalidate({
-        questionSlug,
-      });
-      toast.success("Jawaban berhasil dikirim");
+  const editAnswerMutation = trpc.answers.edit.useMutation({
+    onSuccess: () => {
+      toast.success("Jawaban berhasil diperbarui");
       handleClose();
       router.refresh();
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(error.message || "Gagal memperbarui jawaban");
     },
   });
 
@@ -67,7 +64,7 @@ export const AnswerModalForm = () => {
 
           // Jika semua paragraph kosong
           const hasNonEmptyParagraph = content.some((node: any) => {
-            if (node.type !== "paragraph") return true; // dianggap non-kosong jika bukan paragraph
+            if (node.type !== "paragraph") return true;
             if (!Array.isArray(node.content)) return false;
             return node.content.length > 0; // ada isinya
           });
@@ -85,20 +82,56 @@ export const AnswerModalForm = () => {
 
   const form = useForm<z.infer<typeof answerSchema>>({
     resolver: zodResolver(answerSchema),
+    defaultValues: {
+      content: JSON.stringify({
+        type: "doc",
+        content: [],
+      }),
+    },
   });
+
+  useEffect(() => {
+    if (isOpen && answerContent) {
+      // Ensure answerContent is properly formatted
+      const contentToSet =
+        typeof answerContent === "string"
+          ? answerContent
+          : JSON.stringify(answerContent);
+
+      form.setValue("content", contentToSet);
+      form.trigger("content"); // Validate the field
+    }
+  }, [isOpen, answerContent, form]);
 
   const onSubmit = (values: z.infer<typeof answerSchema>) => {
     if (status == "unauthenticated") return;
-    if (!questionId) return;
 
-    mutate({
-      questionId: questionId,
+    if (!answerId) {
+      toast.error("ID jawaban tidak ditemukan");
+      return;
+    }
+    editAnswerMutation.mutate({
+      answerId,
       content: values.content,
     });
   };
+
   const handleClose = () => {
     form.reset();
-    close();
+    closeEditModal();
+  };
+
+  // Parse content safely for the editor
+  const getEditorContent = (value: string) => {
+    try {
+      const parsed = JSON.parse(value || '{"type":"doc","content":[]}');
+      return parsed;
+    } catch {
+      return {
+        type: "doc",
+        content: [],
+      };
+    }
   };
 
   return (
@@ -139,28 +172,15 @@ export const AnswerModalForm = () => {
                   <FormItem className="flex min-h-0 flex-1 flex-col">
                     <FormControl>
                       <TooltipProvider>
-                        {/* <MinimalTiptapEditor
-                          placeholder="Tulis jawaban anda.."
-                          className="h-full w-full overflow-hidden focus-within:border-foreground"
-                          editorContentClassName="p-5 flex-1 overflow-y-auto max-h-[calc(100vh-200px)]"
-                          immediatelyRender={false}
-                          output="json"
-                          autofocus={true}
-                          editable={true}
-                          editorClassName="focus:outline-none"
-                          onChange={(value) => {
-                            field.onChange(JSON.stringify(value));
-                          }}
-                          value={field.value}
-                        /> */}
                         <MinimalTiptapThree
                           placeholder="Tulis jawaban anda.."
-                          editorClassName="flex-1 w-full  rounded-lg overflow-hidden"
+                          editorClassName="flex-1 w-full rounded-lg overflow-hidden"
                           editorContentClassName="p-5 overflow-y-auto h-full"
                           immediatelyRender={false}
                           output="json"
                           autofocus
                           editable
+                          content={getEditorContent(field.value)}
                           value={field.value}
                           onChange={(value) => {
                             console.log("onChange", value);
@@ -177,7 +197,7 @@ export const AnswerModalForm = () => {
           </Form>
 
           <LoadingButton
-            loading={isPending}
+            loading={editAnswerMutation.isPending}
             disabled={!form.formState.isValid}
             type="submit"
             form="answer-form"

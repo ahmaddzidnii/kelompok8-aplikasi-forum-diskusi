@@ -173,6 +173,7 @@ export const questionsRouter = createTRPCRouter({
           },
           select: {
             answerId: true,
+            content: true,
             user: true,
           },
         });

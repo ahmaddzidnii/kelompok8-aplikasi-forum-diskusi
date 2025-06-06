@@ -41,10 +41,8 @@ const AdminLayout = async ({ children }: AdminLayoutProps) => {
         }
       >
         <AppSidebar variant="sidebar" />
-        <SidebarInset className="flex-1 overflow-auto">
-          <div className="container mx-auto flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 md:gap-6">{children}</div>
-          </div>
+        <SidebarInset className="hide-scrollbar flex-1 overflow-auto">
+          {children}
         </SidebarInset>
       </SidebarProvider>
     </div>

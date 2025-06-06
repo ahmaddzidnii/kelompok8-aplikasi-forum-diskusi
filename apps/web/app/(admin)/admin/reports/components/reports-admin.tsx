@@ -61,13 +61,13 @@ export default function ReportsAdmin() {
     setQueryState({ report: null });
   };
 
-  const handleHideContent = (reportId: number) => {
-    setReports(
-      reports.map((report) =>
-        report.id === reportId ? { ...report, isHidden: true } : report,
-      ),
-    );
-  };
+  // const handleHideContent = (reportId: number) => {
+  //   setReports(
+  //     reports.map((report) =>
+  //       report.id === reportId ? { ...report, isHidden: true } : report,
+  //     ),
+  //   );
+  // };
 
   const handleDeleteContent = (reportId: number) => {
     setReports(
@@ -98,7 +98,7 @@ export default function ReportsAdmin() {
           <ReportDetail
             report={selectedReport}
             onResolve={handleResolveReport}
-            onHide={handleHideContent}
+            // onHide={handleHideContent}
             onDelete={handleDeleteContent}
           />
         </div>
