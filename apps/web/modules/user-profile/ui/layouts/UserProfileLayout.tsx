@@ -19,7 +19,9 @@ export const UserProfileLayout = async ({
   username,
 }: UserProfileLayoutProps) => {
   const getOneUserPromise = trpc.users.getOneUser({ username });
-  const getCountNavbarPromise = trpc.users.getCountNavbar();
+  const getCountNavbarPromise = trpc.users.getCountNavbar({
+    username,
+  });
 
   const [resultGetOneUser, resultGetCountNavbar] = await Promise.allSettled([
     getOneUserPromise,

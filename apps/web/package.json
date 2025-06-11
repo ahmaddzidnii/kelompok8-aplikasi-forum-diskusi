@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node prisma/seed.js",
+    "migrate:fresh": "prisma migrate reset && npx prisma db push && npm run seed",
     "postinstall": "prisma generate"
   },
   "dependencies": {

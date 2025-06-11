@@ -16,7 +16,7 @@ export const UserPageSidebar = async ({ user }: UserPageSidebarProps) => {
     <>
       {/* User profile mobile device */}
       <Card className="overflow-hidden md:hidden">
-        <div className="h-32 bg-[linear-gradient(180deg,_#3B83F6,_#4FE04D)]"></div>
+        <div className="h-32 bg-primary/80"></div>
         <CardContent className="relative pt-0">
           <div className="flex items-start justify-between">
             <Avatar className="-mt-12 size-24 border-4 border-background bg-background">
