@@ -64,23 +64,19 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 
 ---
 
-## 📋 Instalasi & Pengaturan
-
-### Prasyarat
+## 📋 Prasyarat Sistem
 
 - Node.js (versi terbaru)
 - PostgreSQL
 - Auth.js Setup (akun dan konfigurasi API)
 
-### Pengaturan Pengembangan Lokal
-
-Coming Soon
-
 ---
 
 ## 📱 Tangkapan Layar
 
-Coming Soon
+Berikut tampilan antarmuka beranda ForumDiskusi:
+
+![Tampilan Beranda](design/ui/beranda/Desktop%20-%20Beranda.png)
 
 ---
 
