@@ -70,7 +70,7 @@ export const UserVoteListModal = () => {
             />
             <div>
               <Link
-                href={`/profile/${user.username}`}
+                href={`/@${user.username}`}
                 className="font-semibold text-blue-600 hover:underline"
               >
                 {user.name}
