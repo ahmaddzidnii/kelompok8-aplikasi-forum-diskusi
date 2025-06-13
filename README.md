@@ -41,7 +41,7 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 
 1. **Pengguna Mendaftar atau Login**
 
-   - Registrasi menggunakan email dan kata sandi.
+   - Registrasi menggunakan akun Google atau GitHub.
    - Setelah verifikasi, pengguna dapat langsung mengakses aplikasi.
 
 2. **Bergabung dalam Diskusi**
@@ -55,39 +55,35 @@ ForumDiskusi adalah aplikasi forum online modern yang dirancang untuk memfasilit
 
 ## 👥 Anggota Tim
 
-| Nama                          | NIM           | Peran                |
-| ----------------------------- | ------------- | -------------------- |
-| [MUHAMMAD YOGA AKBAR HABIBIE] | [23106050034] | [Project Manager]    |
-| [DWI ESTRIANA]                | [23106050046] | [DevOps Engineer]    |
-| [AHMAD ZIDNI HIDAYAT]         | [23106050077] | [Software Developer] |
-| [SYAFIQ RUSTIAWANTO]          | [23106050094] | [System Analyst]     |
+| Nama                        | NIM         | Peran              |
+| --------------------------- | ----------- | ------------------ |
+| Muhammad Yoga Akbar Habibie | 23106050034 | Project Manager    |
+| Dwi Estriana                | 23106050046 | DevOps Engineer    |
+| Ahmad Zidni Hidayat         | 23106050077 | Software Developer |
+| Syafiq Rustiawanto          | 23106050094 | System Analyst     |
 
 ---
 
-## 📋 Instalasi & Pengaturan
-
-### Prasyarat
+## 📋 Prasyarat Sistem
 
 - Node.js (versi terbaru)
 - PostgreSQL
 - Auth.js Setup (akun dan konfigurasi API)
 
-### Pengaturan Pengembangan Lokal
-
-Coming Soon
-
 ---
 
 ## 📱 Tangkapan Layar
 
-Coming Soon
+Berikut tampilan antarmuka beranda ForumDiskusi:
+
+![Tampilan Beranda](design/ui/beranda/Desktop%20-%20Beranda.png)
 
 ---
 
 ## 🎯 Peta Jalan
 
 - Implementasi dasar forum & komentar
-- Sistem autentikasi dengan Kinde Auth
+- Sistem autentikasi dengan Auth.js
 - Fitur pencarian dan kategori
 - Statistik profil pengguna
 - Moderasi dan pelaporan konten
